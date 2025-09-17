@@ -1,0 +1,39 @@
+program: scripts/fit_and_score_estimators.py
+entity: rylan
+project: monkey-power-law-estimators
+method: grid
+parameters:
+  dataset_name:
+    values: [ "synthetic" ]
+  dataset_kwargs:
+    parameters:
+      distribution:
+        values: [
+          "kumaraswamy",
+          "beta"
+        ]
+      a:
+        values: [
+          0.15,
+          0.4,
+        ]
+      b:
+        values: [
+          3.5,
+          5.0,
+        ]
+      loc:
+        values: [
+          0.0,
+        ]
+      scale:
+        values: [
+          0.1,
+          0.8,
+        ]
+  num_problems:
+    values: [64, 128]
+  num_samples_per_problem:
+    values: [ 100, 215, 464, 1000, 2154, 4642, 10000 ]
+  seed:
+    values: [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]

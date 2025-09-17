@@ -1,0 +1,33 @@
+program: scripts/fit_and_score_estimators.py
+entity: rylan
+project: monkey-power-law-estimators
+method: grid
+parameters:
+  dataset_name:
+    values: [ "bon_jailbreaking_text" ]
+  dataset_kwargs:
+    parameters:
+      Model:
+        values: [
+          "Claude 3.5 Sonnet",
+          "Claude 3.5 Opus",
+          "Gemini 1.5 Flash",
+          "Gemini 1.5 Pro",
+          "GPT4o Mini",
+          "GPT4o",
+          # "Llama 3 8B IT",  # No Power Laws.
+        ]
+      Modality:
+        values: [
+          "Text",
+        ]
+      Temperature:
+        values: [
+          1.0
+        ]
+  num_problems:
+    values: [64, 128]
+  num_samples_per_problem:
+    values: [ 100, 316, 1000, 3162, 10000]
+  seed:
+    values: [ 0, 1, 2, 3, 4]
