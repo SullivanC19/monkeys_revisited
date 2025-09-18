@@ -13,7 +13,7 @@ COPY monkeys/ ./monkeys/
 
 # Install your package + selected extras directly from pyproject
 RUN python -m pip install --upgrade pip setuptools wheel \
- && pip install -e .[viz,io,hf]
+ && pip install -e ".[viz,io,hf]"
 
 # Bring in experiment code last so edits don't bust the deps cache
 COPY experiments/src ./experiments/src
