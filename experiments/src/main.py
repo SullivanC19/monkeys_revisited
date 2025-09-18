@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.datasets import make_blobs
+import monkeys
 
 def env_int(name, default):
     try:
@@ -16,9 +17,6 @@ if __name__ == "__main__":
 
     # Show thread settings
     print("Detected CPU cores:", mp.cpu_count())
-    print("Thread caps:",
-          {k: os.environ.get(k) for k in
-           ["OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "NUMEXPR_NUM_THREADS"]})
 
     # Tiny demo
     X, y = make_blobs(n_samples=10_000, centers=5, n_features=8, random_state=42)
@@ -29,17 +27,6 @@ if __name__ == "__main__":
     kmeans.fit(df.values)
     print("KMeans inertia:", kmeans.inertia_)
     print("Cluster centers (first row):", kmeans.cluster_centers_[0])
-
-    # Optional: probe for GPU presence (informational only; sklearn won’t use it)
-    try:
-        import subprocess
-        smi = subprocess.run(["nvidia-smi"], capture_output=True, text=True)
-        if smi.returncode == 0:
-            print("nvidia-smi found. GPU visible to container (not used by sklearn).")
-        else:
-            print("nvidia-smi not found or no GPU available (totally fine).")
-    except Exception:
-        print("nvidia-smi probe skipped.")
 
     print("Done ✅")
 
