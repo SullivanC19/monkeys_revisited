@@ -15,9 +15,9 @@ import scipy.stats._continuous_distns
 import scipy.special  # Added for logsumexp
 from typing import Any, Dict, List, Optional, Tuple, Union
 from sklearn.cluster import KMeans
-import src.EM as EM
-import src.analyze as analyze
-from src.analyze import estimate_pass_at_k
+from . import EM as EM
+from . import analyze as analyze
+from .analyze import estimate_pass_at_k
 
 
 def compute_beta_geometric_log_prob(k, n, alpha, beta):

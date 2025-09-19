@@ -14,7 +14,7 @@ import scipy.stats
 import scipy.stats._continuous_distns
 import scipy.special  # Added for logsumexp
 from typing import Any, Dict, List, Optional, Tuple, Union
-from src.EM import compute_beta_binomial_log_prob
+from .EM import compute_beta_binomial_log_prob
 from sklearn.cluster import KMeans
 
 

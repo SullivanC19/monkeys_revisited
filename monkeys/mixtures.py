@@ -13,7 +13,7 @@ import scipy.stats
 import scipy.stats._continuous_distns
 from typing import Any, Dict, List, Optional, Tuple, Union
 import matplotlib.pyplot as plt
-import src.globals
+from . import globals
 
 
 def compute_beta_binomial_two_parameters_mixture_negative_log_likelihood(

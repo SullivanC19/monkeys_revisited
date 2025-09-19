@@ -1,9 +1,9 @@
 import sys
 import os
-import src.analyze as analyze 
-import src.stats_utils as stats_utils
-import src.mixtures as mixtures
-import src.better_optimiation as bopt
+import monkeys.analyze as analyze 
+import monkeys.stats_utils as stats_utils
+import monkeys.mixtures as mixtures
+import monkeys.better_optimiation as bopt
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -12,12 +12,12 @@ import sklearn
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
-import src.EM as EM
-from src.EM import compute_estimate, compute_estimate_stable, compute_p_at_ks, compute_estimates_better_mixture
-import src.better_em as BEM
+import monkeys.EM as EM
+from monkeys.EM import compute_estimate, compute_estimate_stable, compute_p_at_ks, compute_estimates_better_mixture
+import monkeys.better_em as BEM
 import heapq
-import src.bem_geometric as bemg
-from src.bem_geometric import compute_estimates_better_three_param_geometric, compute_estimates_three_param
+import monkeys.bem_geometric as bemg
+from monkeys.bem_geometric import compute_estimates_better_three_param_geometric, compute_estimates_three_param
 import random
 from multiprocessing import Pool, cpu_count
 import functools
@@ -38,7 +38,6 @@ def make_single_graph_and_get_loss(model_name, n, ks, data, individual_data, shu
     figure_name = f'notebooks/statistical_analysis/data/processed_data/graphs_shuffled/{model_name}_jailbreaking_{n}.svg'
 
     samples = n
-
 
     #define the ks that we will try to predict
 
@@ -283,11 +282,29 @@ def process_single_experiment(args):
         return []
 
 def main():
+    mode = 'math'
+
+    assert mode in ['jailbreaking', 'math', 'code']
+
+    if mode == 'jailbreaking':
+        data = analyze.create_or_load_bon_jailbreaking_text_pass_at_k_df()
+
+    if mode == 'math':
+        data = analyze.create_or_load_large_language_monkeys_pythia_math_pass_at_k_df()
+
+    if mode == 'code':
+        data = analyze.create_or_load_large_language_monkeys_code_contests_pass_at_k_df()
+
+    data = data[['Score', 'Scaling Parameter', 'Problem Idx', 'Model']]
+    data = data[data['Scaling Parameter'] == 1].drop('Scaling Parameter', axis=1)
+
+    import pdb; pdb.set_trace()
+
     output_file = 'notebooks/statistical_analysis/data/processed_data/math_shuffled_uniform.csv'
     shuffle = True
 
     #get data for the number of math problems solved
-    data = analyze.create_or_load_large_language_monkeys_code_contests_pass_at_k_df() #analyze.create_or_load_bon_jailbreaking_text_pass_at_k_df()
+    # data = analyze.create_or_load_large_language_monkeys_code_contests_pass_at_k_df() #analyze.create_or_load_bon_jailbreaking_text_pass_at_k_df()
 
     #this tells us whether each attempt was a success or failure -- I don't think it adds any 
     #value given that the attempts were independent
@@ -296,15 +313,16 @@ def main():
 
 
     # #value given that the attempts were independent
-    individual_data = analyze.create_or_load_large_language_monkeys_pythia_math_individual_outcomes_df()#analyze.create_or_load_bon_jailbreaking_text_individual_outcomes_df()
+    # individual_data = analyze.create_or_load_large_language_monkeys_pythia_math_individual_outcomes_df()
+    individual_data = analyze.create_or_load_bon_jailbreaking_text_individual_outcomes_df()
 
-
-    problem_count = data['Problem Idx'].nunique()
+    problem_count = individual_data['Problem Idx'].nunique()
     probs = np.random.uniform(0, 0.10, size = problem_count)
     for i, problem_index in enumerate(individual_data['Problem Idx'].unique()):
         mask = (individual_data['Problem Idx'] == problem_index)
         individual_data.loc[mask, 'Score'] = np.random.binomial(n=1, p = probs[i], size=mask.sum())
 
+    import pdb; pdb.set_trace()
 
     # If you also want to include Benchmark in the grouping:
     data = individual_data.groupby(['Model', 'Problem Idx', 'Benchmark']).agg(
@@ -356,9 +374,17 @@ def main():
     print(f"Total experiments to run: {len(args_list)}")
     print(f"Using {cpu_count()} CPU cores")
     
-    # Process experiments in parallel
-    with Pool(processes=1) as pool:
-        results = pool.map(process_single_experiment, args_list)
+    # # Process experiments in parallel
+    # with Pool(processes=1) as pool:
+    #     results = pool.map(process_single_experiment, args_list)
+
+    # TODO : Parallelize this
+    for args in args_list:
+        results = process_single_experiment(args)
+        if results:
+            with open(output_file, 'a') as f:
+                for line in results:
+                    f.write(line + '\n')
     
     # Write all results to file
     with open(output_file, 'a') as f:

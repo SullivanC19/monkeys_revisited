@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-import stats
 import scipy
 import numpy as np
 import pandas as pd
@@ -14,7 +13,7 @@ def plot_histo_and_beta(series, beta_params):
     hist = plt.hist(series, bins=30, density = True, alpha =0.6, color = 'skyblue', label = 'P@1 Distribution')
     x = np.linspace(0, 1, 1000)
     beta_pdf = scipy.stats.beta.pdf(x, beta_params['alpha'], beta_params['beta'], loc=beta_params['loc'], scale=beta_params['scale'])
-    plt.plot(x, beta_pdf, 'r-', lw=2, label=f'Beta({beta_params['alpha']:.6f}, {beta_params['beta']:.6f})')
+    plt.plot(x, beta_pdf, 'r-', lw=2, label=f"Beta({beta_params['alpha']:.6f}, {beta_params['beta']:.6f})")
 
     # Add labels and legend
     plt.xlabel('Value')

@@ -13,7 +13,8 @@ import scipy.stats
 import scipy.stats._continuous_distns
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import src.globals
+from . import globals
+from . import analyze
 
 # Increase precision.
 mpmath.mp.prec = 100
@@ -451,7 +452,7 @@ def compute_pass_at_k_from_num_samples_and_num_successes_df(
     num_problems = len(num_samples_and_num_successes_df)
     pass_at_k_dfs_list = []
     for k in ks_list:
-        pass_at_k = src.analyze.estimate_pass_at_k(
+        pass_at_k = analyze.estimate_pass_at_k(
             num_samples_total=num_samples,
             num_samples_correct=num_successes,
             k=k,
@@ -540,7 +541,7 @@ def compute_scaling_exponent_from_distributional_fit(
             (
                 _,
                 fitted_power_law_parameters_df,
-            ) = src.analyze.fit_power_law(
+            ) = analyze.fit_power_law(
                 tmp_df,
                 covariate_col="Scaling Parameter",
                 target_col="Neg Log Score",
@@ -654,24 +655,24 @@ def create_or_load_bon_jailbreaking_text_beta_binomial_mle_df(
     if refresh or not os.path.exists(bon_jailbreaking_beta_binomial_mle_df_path):
         print(f"Creating {bon_jailbreaking_beta_binomial_mle_df_path} anew...")
 
-        bon_jailbreaking_individual_outcomes_df = src.analyze.create_or_load_bon_jailbreaking_text_individual_outcomes_df(
+        bon_jailbreaking_individual_outcomes_df = analyze.create_or_load_bon_jailbreaking_text_individual_outcomes_df(
             refresh=False,
             # refresh=True,
         )
         bon_jailbreaking_num_samples_and_num_successes_df = (
-            src.analyze.convert_individual_outcomes_to_num_samples_and_num_successes_df(
+            analyze.convert_individual_outcomes_to_num_samples_and_num_successes_df(
                 individual_outcomes_df=bon_jailbreaking_individual_outcomes_df,
-                groupby_cols=src.globals.BON_JAILBREAKING_GROUPBY_COLS
+                groupby_cols=globals.BON_JAILBREAKING_GROUPBY_COLS
                 + ["Problem Idx"],
             )
         )
 
         bon_jailbreaking_beta_binomial_mle_df = (
             bon_jailbreaking_num_samples_and_num_successes_df.groupby(
-                src.globals.BON_JAILBREAKING_GROUPBY_COLS
+                globals.BON_JAILBREAKING_GROUPBY_COLS
             )
             .apply(
-                lambda df: src.analyze.fit_beta_binomial_three_parameters_to_num_samples_and_num_successes(
+                lambda df: analyze.fit_beta_binomial_three_parameters_to_num_samples_and_num_successes(
                     num_samples_and_num_successes_df=df
                 )
             )
@@ -680,7 +681,7 @@ def create_or_load_bon_jailbreaking_text_beta_binomial_mle_df(
 
         # Add scaling exponent numerically.
         bon_jailbreaking_beta_binomial_mle_df = (
-            src.analyze.compute_scaling_exponent_from_distributional_fit(
+            analyze.compute_scaling_exponent_from_distributional_fit(
                 distributional_fit_df=bon_jailbreaking_beta_binomial_mle_df,
                 distribution="beta_three_parameter",
             )
@@ -746,10 +747,10 @@ def create_or_load_bon_jailbreaking_audio_individual_outcomes_df(
             )
             # Convert Score from bool to float.
             df["Score"] = df["Score"].astype(float)
-            df["Model"] = src.globals.BON_JAILBREAKING_MODELS_TO_NICE_STRINGS[
+            df["Model"] = globals.BON_JAILBREAKING_MODELS_TO_NICE_STRINGS[
                 model_name
             ]
-            df["Modality"] = src.globals.BON_JAILBREAKING_MODALITY_TO_NICE_STRINGS[
+            df["Modality"] = globals.BON_JAILBREAKING_MODALITY_TO_NICE_STRINGS[
                 modality
             ]
             df["Temperature"] = temperature
@@ -818,7 +819,7 @@ def create_or_load_bon_jailbreaking_audio_pass_at_k_df(
         ):
             pass_at_k_df = compute_pass_at_k_from_num_samples_and_num_successes_df(
                 num_samples_and_num_successes_df=subset_num_samples_and_num_successes_df,
-                ks_list=src.globals.BON_JAILBREAKING_AUDIO_Ks_LIST,
+                ks_list=globals.BON_JAILBREAKING_AUDIO_Ks_LIST,
             )
             pass_at_k_df["Model"] = model
             pass_at_k_df["Modality"] = modality
@@ -896,10 +897,10 @@ def create_or_load_bon_jailbreaking_text_individual_outcomes_df(
             )
             # Convert Score from bool to float.
             df["Score"] = df["Score"].astype(float)
-            df["Model"] = src.globals.BON_JAILBREAKING_MODELS_TO_NICE_STRINGS[
+            df["Model"] = globals.BON_JAILBREAKING_MODELS_TO_NICE_STRINGS[
                 model_name
             ]
-            df["Modality"] = src.globals.BON_JAILBREAKING_MODALITY_TO_NICE_STRINGS[
+            df["Modality"] = globals.BON_JAILBREAKING_MODALITY_TO_NICE_STRINGS[
                 modality
             ]
             df["Temperature"] = temperature
@@ -947,24 +948,24 @@ def create_or_load_bon_jailbreaking_text_kumaraswamy_binomial_mle_df(
         print(
             f"Creating {bon_jailbreaking_text_kumaraswamy_binomial_mle_df_path} anew..."
         )
-        bon_jailbreaking_text_individual_outcomes_df = src.analyze.create_or_load_bon_jailbreaking_text_individual_outcomes_df(
+        bon_jailbreaking_text_individual_outcomes_df = analyze.create_or_load_bon_jailbreaking_text_individual_outcomes_df(
             refresh=False,
             # refresh=True,
         )
         bon_jailbreaking_text_num_samples_and_num_successes_df = (
-            src.analyze.convert_individual_outcomes_to_num_samples_and_num_successes_df(
+            analyze.convert_individual_outcomes_to_num_samples_and_num_successes_df(
                 individual_outcomes_df=bon_jailbreaking_text_individual_outcomes_df,
-                groupby_cols=src.globals.BON_JAILBREAKING_GROUPBY_COLS
+                groupby_cols=globals.BON_JAILBREAKING_GROUPBY_COLS
                 + ["Problem Idx"],
             )
         )
 
         bon_jailbreaking_text_kumaraswamy_binomial_mle_df = (
             bon_jailbreaking_text_num_samples_and_num_successes_df.groupby(
-                src.globals.BON_JAILBREAKING_GROUPBY_COLS
+                globals.BON_JAILBREAKING_GROUPBY_COLS
             )
             .apply(
-                lambda df: src.analyze.fit_kumaraswamy_binomial_three_parameters_to_num_samples_and_num_successes(
+                lambda df: analyze.fit_kumaraswamy_binomial_three_parameters_to_num_samples_and_num_successes(
                     num_samples_and_num_successes_df=df
                 )
             )
@@ -973,7 +974,7 @@ def create_or_load_bon_jailbreaking_text_kumaraswamy_binomial_mle_df(
 
         # Add scaling exponent numerically.
         bon_jailbreaking_text_kumaraswamy_binomial_mle_df = (
-            src.analyze.compute_scaling_exponent_from_distributional_fit(
+            analyze.compute_scaling_exponent_from_distributional_fit(
                 distributional_fit_df=bon_jailbreaking_text_kumaraswamy_binomial_mle_df,
                 distribution="kumaraswamy_three_parameter",
             )
@@ -1032,7 +1033,7 @@ def create_or_load_bon_jailbreaking_text_pass_at_k_df(
         ):
             pass_at_k_df = compute_pass_at_k_from_num_samples_and_num_successes_df(
                 num_samples_and_num_successes_df=subset_num_samples_and_num_successes_df,
-                ks_list=src.globals.BON_JAILBREAKING_TEXT_Ks_LIST,
+                ks_list=globals.BON_JAILBREAKING_TEXT_Ks_LIST,
             )
             pass_at_k_df["Model"] = model
             pass_at_k_df["Modality"] = modality
@@ -1109,10 +1110,10 @@ def create_or_load_bon_jailbreaking_vision_individual_outcomes_df(
                 },
                 inplace=True,
             )
-            df["Model"] = src.globals.BON_JAILBREAKING_MODELS_TO_NICE_STRINGS[
+            df["Model"] = globals.BON_JAILBREAKING_MODELS_TO_NICE_STRINGS[
                 model_name
             ]
-            df["Modality"] = src.globals.BON_JAILBREAKING_MODALITY_TO_NICE_STRINGS[
+            df["Modality"] = globals.BON_JAILBREAKING_MODALITY_TO_NICE_STRINGS[
                 modality
             ]
             df["Temperature"] = temperature
@@ -1181,7 +1182,7 @@ def create_or_load_bon_jailbreaking_vision_pass_at_k_df(
         ):
             pass_at_k_df = compute_pass_at_k_from_num_samples_and_num_successes_df(
                 num_samples_and_num_successes_df=subset_num_samples_and_num_successes_df,
-                ks_list=src.globals.BON_JAILBREAKING_VISION_Ks_LIST,
+                ks_list=globals.BON_JAILBREAKING_VISION_Ks_LIST,
             )
             pass_at_k_df["Model"] = model
             pass_at_k_df["Modality"] = modality
@@ -1256,7 +1257,7 @@ def create_or_load_cross_validated_bon_jailbreaking_text_scaling_coefficient_dat
             modality,
             temperature,
         ), subset_df in individual_outcomes_per_problem_df.groupby(
-            src.globals.BON_JAILBREAKING_GROUPBY_COLS
+            globals.BON_JAILBREAKING_GROUPBY_COLS
         ):
             print(
                 f"Processing model: {model}, modality: {modality}, temperature: {temperature}"
@@ -1334,7 +1335,7 @@ def create_or_load_cross_validated_large_language_monkey_pythia_math_scaling_coe
             model,
             benchmark,
         ), subset_df in individual_outcomes_per_problem_df.groupby(
-            src.globals.LARGE_LANGUAGE_MONKEYS_GROUPBY_COLS
+            globals.LARGE_LANGUAGE_MONKEYS_GROUPBY_COLS
         ):
             print(f"Processing model: {model}, benchmark: {benchmark}")
             df = cross_validate_power_law_coefficient_estimators_from_individual_outcomes_wrapper(
@@ -1831,7 +1832,7 @@ def create_or_load_large_language_monkeys_code_contests_pass_at_k_df(
         ):
             pass_at_k_df = compute_pass_at_k_from_num_samples_and_num_successes_df(
                 num_samples_and_num_successes_df=subset_num_samples_and_num_successes_df,
-                ks_list=src.globals.LARGE_LANGUAGE_MONKEYS_ORIGINAL_Ks_LIST,
+                ks_list=globals.LARGE_LANGUAGE_MONKEYS_ORIGINAL_Ks_LIST,
             )
             pass_at_k_df["Model"] = model
             pass_at_k_df["Benchmark"] = benchmark
@@ -1977,7 +1978,7 @@ def create_or_load_large_language_monkeys_mini_f2f_pass_at_k_df(
         ):
             pass_at_k_df = compute_pass_at_k_from_num_samples_and_num_successes_df(
                 num_samples_and_num_successes_df=subset_num_samples_and_num_successes_df,
-                ks_list=src.globals.LARGE_LANGUAGE_MONKEYS_ORIGINAL_Ks_LIST,
+                ks_list=globals.LARGE_LANGUAGE_MONKEYS_ORIGINAL_Ks_LIST,
             )
             pass_at_k_df["Model"] = model
             pass_at_k_df["Benchmark"] = benchmark
@@ -2026,12 +2027,12 @@ def create_or_load_large_language_monkeys_pythia_math_beta_binomial_mle_df(
             f"Creating {large_language_monkeys_pythia_math_beta_binomial_mle_df_path} anew..."
         )
         llmonkeys_groupby_cols = ["Model", "Benchmark"]
-        llmonkeys_individual_outcomes_df = src.analyze.create_or_load_large_language_monkeys_pythia_math_individual_outcomes_df(
+        llmonkeys_individual_outcomes_df = analyze.create_or_load_large_language_monkeys_pythia_math_individual_outcomes_df(
             refresh=False,
             # refresh=True,
         )
         llmonkeys_num_samples_and_num_successes_df = (
-            src.analyze.convert_individual_outcomes_to_num_samples_and_num_successes_df(
+            analyze.convert_individual_outcomes_to_num_samples_and_num_successes_df(
                 individual_outcomes_df=llmonkeys_individual_outcomes_df,
                 groupby_cols=llmonkeys_groupby_cols + ["Problem Idx"],
             )
@@ -2040,7 +2041,7 @@ def create_or_load_large_language_monkeys_pythia_math_beta_binomial_mle_df(
         large_language_monkeys_pythia_math_beta_binomial_mle_df = (
             llmonkeys_num_samples_and_num_successes_df.groupby(llmonkeys_groupby_cols)
             .apply(
-                lambda df: src.analyze.fit_beta_binomial_three_parameters_to_num_samples_and_num_successes(
+                lambda df: analyze.fit_beta_binomial_three_parameters_to_num_samples_and_num_successes(
                     num_samples_and_num_successes_df=df
                 )
             )
@@ -2048,7 +2049,7 @@ def create_or_load_large_language_monkeys_pythia_math_beta_binomial_mle_df(
         )
 
         # Add scaling exponent numerically.
-        large_language_monkeys_pythia_math_beta_binomial_mle_df = src.analyze.compute_scaling_exponent_from_distributional_fit(
+        large_language_monkeys_pythia_math_beta_binomial_mle_df = analyze.compute_scaling_exponent_from_distributional_fit(
             distributional_fit_df=large_language_monkeys_pythia_math_beta_binomial_mle_df,
             distribution="beta_three_parameter",
         )
@@ -2086,12 +2087,12 @@ def create_or_load_large_language_monkeys_pythia_math_kumaraswamy_binomial_mle_d
             f"Creating {large_language_monkeys_pythia_math_kumaraswamy_binomial_mle_df_path} anew..."
         )
         llmonkeys_groupby_cols = ["Model", "Benchmark"]
-        llmonkeys_individual_outcomes_df = src.analyze.create_or_load_large_language_monkeys_pythia_math_individual_outcomes_df(
+        llmonkeys_individual_outcomes_df = analyze.create_or_load_large_language_monkeys_pythia_math_individual_outcomes_df(
             refresh=False,
             # refresh=True,
         )
         llmonkeys_num_samples_and_num_successes_df = (
-            src.analyze.convert_individual_outcomes_to_num_samples_and_num_successes_df(
+            analyze.convert_individual_outcomes_to_num_samples_and_num_successes_df(
                 individual_outcomes_df=llmonkeys_individual_outcomes_df,
                 groupby_cols=llmonkeys_groupby_cols + ["Problem Idx"],
             )
@@ -2100,7 +2101,7 @@ def create_or_load_large_language_monkeys_pythia_math_kumaraswamy_binomial_mle_d
         large_language_monkeys_pythia_math_kumaraswamy_binomial_mle_df = (
             llmonkeys_num_samples_and_num_successes_df.groupby(llmonkeys_groupby_cols)
             .apply(
-                lambda df: src.analyze.fit_kumaraswamy_binomial_three_parameters_to_num_samples_and_num_successes(
+                lambda df: analyze.fit_kumaraswamy_binomial_three_parameters_to_num_samples_and_num_successes(
                     num_samples_and_num_successes_df=df
                 )
             )
@@ -2108,7 +2109,7 @@ def create_or_load_large_language_monkeys_pythia_math_kumaraswamy_binomial_mle_d
         )
 
         # Add scaling exponent numerically.
-        large_language_monkeys_pythia_math_kumaraswamy_binomial_mle_df = src.analyze.compute_scaling_exponent_from_distributional_fit(
+        large_language_monkeys_pythia_math_kumaraswamy_binomial_mle_df = analyze.compute_scaling_exponent_from_distributional_fit(
             distributional_fit_df=large_language_monkeys_pythia_math_kumaraswamy_binomial_mle_df,
             distribution="kumaraswamy_three_parameter",
         )
@@ -2248,7 +2249,7 @@ def create_or_load_large_language_monkeys_pythia_math_pass_at_k_df(
         ):
             pass_at_k_df = compute_pass_at_k_from_num_samples_and_num_successes_df(
                 num_samples_and_num_successes_df=subset_num_samples_and_num_successes_df,
-                ks_list=src.globals.LARGE_LANGUAGE_MONKEYS_ORIGINAL_Ks_LIST,
+                ks_list=globals.LARGE_LANGUAGE_MONKEYS_ORIGINAL_Ks_LIST,
             )
             pass_at_k_df["Model"] = model
             pass_at_k_df["Benchmark"] = benchmark
@@ -2288,7 +2289,7 @@ def create_or_load_large_language_monkeys_pythia_math_pass_at_1_beta_fits(
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     # Load the original pass@k data on MATH.
     llmonkeys_original_pass_at_k_df = (
-        src.analyze.create_or_load_large_language_monkeys_pythia_math_pass_at_k_df(
+        analyze.create_or_load_large_language_monkeys_pythia_math_pass_at_k_df(
             refresh=refresh,
         )
     )
@@ -2613,7 +2614,7 @@ def cross_validate_power_law_coefficient_estimators_from_individual_outcomes(
     ).tolist()
 
     # Step 1: Compute the "true" power law exponent using least squares fitting on all the data.
-    pass_at_k_df = src.analyze.compute_pass_at_k_from_individual_outcomes(
+    pass_at_k_df = analyze.compute_pass_at_k_from_individual_outcomes(
         individual_outcomes_per_problem=individual_outcomes_per_problem,
         ks_list=ks_list,
     )
@@ -2625,7 +2626,7 @@ def cross_validate_power_law_coefficient_estimators_from_individual_outcomes(
     (
         _,
         least_sqrs_fitted_power_law_parameters_df,
-    ) = src.analyze.fit_power_law(
+    ) = analyze.fit_power_law(
         df=avg_pass_at_k_df,
         covariate_col="Scaling Parameter",
         target_col="Neg Log Score",
@@ -2728,7 +2729,7 @@ def cross_validate_power_law_coefficient_estimators_from_individual_outcomes_hel
         ).astype(int)
     ).tolist()
 
-    subset_pass_at_k_df = src.analyze.compute_pass_at_k_from_individual_outcomes(
+    subset_pass_at_k_df = analyze.compute_pass_at_k_from_individual_outcomes(
         individual_outcomes_per_problem=subset_individual_outcomes_per_problem,
         ks_list=ks_list,
     )
@@ -2742,7 +2743,7 @@ def cross_validate_power_law_coefficient_estimators_from_individual_outcomes_hel
     (
         subset_avg_pass_at_k_with_predictions_df,
         subset_least_sqrs_fitted_power_law_parameters_df,
-    ) = src.analyze.fit_power_law(
+    ) = analyze.fit_power_law(
         df=subset_avg_pass_at_k_df,
         covariate_col="Scaling Parameter",
         target_col="Neg Log Score",
@@ -2781,7 +2782,7 @@ def cross_validate_power_law_coefficient_estimators_from_individual_outcomes_hel
         )
     ]
     subset_num_samples_and_num_successes_df = (
-        src.analyze.convert_individual_outcomes_to_num_samples_and_num_successes_df(
+        analyze.convert_individual_outcomes_to_num_samples_and_num_successes_df(
             individual_outcomes_df=subset_individual_outcomes_per_problem_df,
             groupby_cols=["Problem Idx"],
         )
@@ -2790,14 +2791,14 @@ def cross_validate_power_law_coefficient_estimators_from_individual_outcomes_hel
     # Method 2: Distributional fit to pass_i@1 using Discretized Beta MLE.
     # Start with reasonable initial alpha, beta.
     subset_discretized_beta_mle_df = pd.DataFrame(
-        src.analyze.fit_discretized_beta_three_parameters_to_num_samples_and_num_successes(
+        analyze.fit_discretized_beta_three_parameters_to_num_samples_and_num_successes(
             num_samples_and_num_successes_df=subset_num_samples_and_num_successes_df,
             resolution=1.0 / num_samples_per_problem,
         )
     ).T
     if not subset_discretized_beta_mle_df["success"].values[0].startswith("Failure"):
         subset_discretized_beta_mle_df = (
-            src.analyze.compute_scaling_exponent_from_distributional_fit(
+            analyze.compute_scaling_exponent_from_distributional_fit(
                 distributional_fit_df=subset_discretized_beta_mle_df,
                 distribution="beta_three_parameter",
             )
@@ -2825,14 +2826,14 @@ def cross_validate_power_law_coefficient_estimators_from_individual_outcomes_hel
 
     # Method 3: Distributional fit to pass_i@1 using Discretized Kumaraswamy MLE.
     subset_discretized_kumaraswamy_mle_df = pd.DataFrame(
-        src.analyze.fit_discretized_kumaraswamy_three_parameters_to_num_samples_and_num_successes(
+        analyze.fit_discretized_kumaraswamy_three_parameters_to_num_samples_and_num_successes(
             num_samples_and_num_successes_df=subset_num_samples_and_num_successes_df,
             resolution=1.0 / num_samples_per_problem,
         )
     ).T
     if not subset_discretized_beta_mle_df["success"].values[0].startswith("Failure"):
         subset_discretized_kumaraswamy_mle_df = (
-            src.analyze.compute_scaling_exponent_from_distributional_fit(
+            analyze.compute_scaling_exponent_from_distributional_fit(
                 distributional_fit_df=subset_discretized_kumaraswamy_mle_df,
                 distribution="kumaraswamy_three_parameter",
             )
@@ -2863,12 +2864,12 @@ def cross_validate_power_law_coefficient_estimators_from_individual_outcomes_hel
 
     # Method 4: Distributional fit to pass_i@1 using Beta Binomial MLE.
     subset_beta_binomial_mle_df = pd.DataFrame(
-        src.analyze.fit_beta_binomial_three_parameters_to_num_samples_and_num_successes(
+        analyze.fit_beta_binomial_three_parameters_to_num_samples_and_num_successes(
             num_samples_and_num_successes_df=subset_num_samples_and_num_successes_df
         )
     ).T
     subset_beta_binomial_mle_df = (
-        src.analyze.compute_scaling_exponent_from_distributional_fit(
+        analyze.compute_scaling_exponent_from_distributional_fit(
             distributional_fit_df=subset_beta_binomial_mle_df,
             distribution="beta_three_parameter",
         )
@@ -2891,13 +2892,13 @@ def cross_validate_power_law_coefficient_estimators_from_individual_outcomes_hel
 
     # Method 5: Distributional fit to pass_i@1 using Kumaraswamy Binomial MLE.
     subset_kumaraswamy_binomial_mle_df = pd.DataFrame(
-        src.analyze.fit_kumaraswamy_binomial_three_parameters_to_num_samples_and_num_successes(
+        analyze.fit_kumaraswamy_binomial_three_parameters_to_num_samples_and_num_successes(
             num_samples_and_num_successes_df=subset_num_samples_and_num_successes_df,
             # maxiter=5,
         )
     ).T
     subset_kumaraswamy_binomial_mle_df = (
-        src.analyze.compute_scaling_exponent_from_distributional_fit(
+        analyze.compute_scaling_exponent_from_distributional_fit(
             distributional_fit_df=subset_kumaraswamy_binomial_mle_df,
             distribution="kumaraswamy_three_parameter",
         )
@@ -2999,7 +3000,7 @@ def evaluate_sampling_strategies_for_power_law_estimators_from_individual_outcom
     ).tolist()
 
     # Step 1: Compute the "true" power law exponent using least squares fitting on *all* the data.
-    pass_at_k_df = src.analyze.compute_pass_at_k_from_individual_outcomes(
+    pass_at_k_df = analyze.compute_pass_at_k_from_individual_outcomes(
         individual_outcomes_per_problem=individual_outcomes_per_problem,
         ks_list=ks_list,
     )
@@ -3011,7 +3012,7 @@ def evaluate_sampling_strategies_for_power_law_estimators_from_individual_outcom
     (
         _,
         least_sqrs_fitted_power_law_parameters_df,
-    ) = src.analyze.fit_power_law(
+    ) = analyze.fit_power_law(
         df=avg_pass_at_k_df,
         covariate_col="Scaling Parameter",
         target_col="Neg Log Score",
@@ -3053,7 +3054,7 @@ def evaluate_sampling_strategies_for_power_law_estimators_from_individual_outcom
         raise ValueError(f"Unknown sampling strategy: {sampling_strategy}")
 
     # Step 3: Estimate the power law coefficients using least squares fitting on the subset of data.
-    subset_pass_at_k_df = src.analyze.compute_pass_at_k_from_individual_outcomes(
+    subset_pass_at_k_df = analyze.compute_pass_at_k_from_individual_outcomes(
         individual_outcomes_per_problem=subset_individual_outcomes_per_problem,
         ks_list=subset_ks_list,
     )
@@ -3066,7 +3067,7 @@ def evaluate_sampling_strategies_for_power_law_estimators_from_individual_outcom
     (
         _,
         subset_least_sqrs_fitted_power_law_parameters_df,
-    ) = src.analyze.fit_power_law(
+    ) = analyze.fit_power_law(
         df=avg_subset_pass_at_k_df,
         covariate_col="Scaling Parameter",
         target_col="Neg Log Score",
@@ -3806,7 +3807,7 @@ def simulate_neg_log_avg_pass_at_k_from_beta_binomial_mle_df(
         for k_idx, k in enumerate(k_values):
             integral_values[
                 k_idx
-            ] = src.analyze.compute_failure_rate_at_k_attempts_under_beta_three_parameter_distribution(
+            ] = analyze.compute_failure_rate_at_k_attempts_under_beta_three_parameter_distribution(
                 k=k,
                 alpha=row["alpha"],
                 beta=row["beta"],
@@ -3837,7 +3838,7 @@ def simulate_neg_log_avg_pass_at_k_from_beta_negative_binomial_mle_df(
         for k_idx, k in enumerate(k_values):
             integral_values[
                 k_idx
-            ] = src.analyze.compute_failure_rate_at_k_attempts_under_beta_three_parameter_distribution(
+            ] = analyze.compute_failure_rate_at_k_attempts_under_beta_three_parameter_distribution(
                 k=k,
                 alpha=row["alpha"],
                 beta=row["beta"],
@@ -3868,7 +3869,7 @@ def simulate_neg_log_avg_pass_at_k_from_kumaraswamy_binomial_mle_df(
         for k_idx, k in enumerate(k_values):
             integral_values[
                 k_idx
-            ] = src.analyze.compute_failure_rate_at_k_attempts_under_kumaraswamy_three_parameter_distribution(
+            ] = analyze.compute_failure_rate_at_k_attempts_under_kumaraswamy_three_parameter_distribution(
                 k=k,
                 alpha=row["alpha"],
                 beta=row["beta"],

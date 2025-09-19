@@ -13,7 +13,7 @@ from scipy.optimize import minimize
 import scipy.stats
 import scipy.stats._continuous_distns
 from typing import Any, Dict, List, Optional, Tuple, Union
-from src import analyze
+from . import analyze
 
 
 def fit_beta_binomial_mixture_em(
