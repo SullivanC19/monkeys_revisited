@@ -165,19 +165,10 @@ def run_single(
         seed (int): Random seed for reproducibility.
     """
     np.random.seed(seed)
-    # print(f"({problem}) {model} with budget: {budget}, k: {k}, seed: {seed}, subproblems: {len(subtask_hardness)} ...")
-
     pass_at_k = compute_true_pass_at_k(subtask_hardness, k)
-    # print(f"({problem}) {model} true pass@{k}: {pass_at_k:.4f}")
-
     regression_estimate, regression_n_attempts, regression_n_successes = simulate_regression_estimate_of_pass_at_k(subtask_hardness, budget, k)
-    # print(f"({problem}) {model} regression estimate of pass@{k}: {regression_estimate:.4f}")
-
     discretization_estimate, discretization_n_attempts, discretization_n_successes = simulate_discretization_estimate_of_pass_at_k(subtask_hardness, budget, k)
-    # print(f"({problem}) {model} discretization estimate of pass@{k}: {discretization_estimate:.4f}")
-
     dynamic_estimate, dynamic_n_attempts, dynamic_n_successes = simulate_dynamic_estimate_of_pass_at_k(subtask_hardness, budget, k)
-    # print(f"({problem}) {model} dynamic estimate of pass@{k}: {dynamic_estimate:.4f}")
 
     return {
         "Problem": problem,
