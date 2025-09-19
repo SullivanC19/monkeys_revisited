@@ -199,7 +199,7 @@ def run():
 
     for problem, gen in DATA_SOURCES:
         for model, subtask_hardness in extract_models_with_subtask_hardness(gen()):
-            print(f"Simulating {model} on {problem} with {len(subtask_hardness)} subproblems... (~5 minutes)")
+            print(f"Simulating {model} on {problem} with {len(subtask_hardness)} subproblems... (~10 minutes)")
             tasks = (
                 (problem, model, subtask_hardness, budget, k, seed)
                 for budget in BUDGET_VALUES
