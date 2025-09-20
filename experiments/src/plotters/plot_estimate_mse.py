@@ -1,17 +1,12 @@
-from pathlib import Path
-import re, unicodedata
 import pandas as pd
 from pandas.api.types import CategoricalDtype
 import seaborn as sns
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import numpy as np
 
-from constants import DIR_RESULTS, DIR_PLOTS
-from utilities import sanitize
+from constants import DIR_RESULTS, DIR_PLOTS, SOURCES_TO_TITLES, APPROACH_TO_TITLES
 
-# ---------- config ----------
 sns.set_theme(style="whitegrid")
 sns.set_context("paper")
 
@@ -114,10 +109,14 @@ def plot_mse_facets_by_k(stats: pd.DataFrame, out_dir=DIR_PLOTS, col_wrap=4):
     stats["Method"] = pd.Categorical(stats["Method"], METHOD_ORDER, ordered=True)
     stats["Pair"] = stats["Model"].astype(str) + " — " + stats["Problem"].astype(str)
 
-    for k_val, gk in stats.groupby("k", dropna=False):
-        gk = gk.sort_values(["Pair", "Budget", "Method"])
+    for (k_val, problem), gkp in stats.groupby(["k", "Problem"], dropna=False):
+        gkp = gkp.sort_values(["Model", "Budget", "Method"])
+        models = gkp["Model"].dropna().unique().tolist()
+        keep = models[:len(models) // col_wrap * col_wrap]
+        gkp = gkp[gkp["Model"].isin(keep)]
+
         g = sns.FacetGrid(
-            gk, col="Pair", col_wrap=col_wrap, sharex=True, sharey=True,
+            gkp, col="Model", col_wrap=col_wrap, sharex=True, sharey=True,
             despine=True
         )
         g.map_dataframe(_facet_panel)
@@ -126,28 +125,27 @@ def plot_mse_facets_by_k(stats: pd.DataFrame, out_dir=DIR_PLOTS, col_wrap=4):
         for ax in g.axes.flat:
             ax.set_yscale("log")
             ax.set_xlabel("Budget")
-            ax.set_ylabel("Mean Squared Error (vs True Pass@k)")
+            ax.set_ylabel("MSE vs True Pass@k")
 
         # Titles
         g.set_titles(col_template="{col_name}")
+        g.figure.suptitle(f"Prediction Mean Squared Error (MSE) for {SOURCES_TO_TITLES[problem]}", y=1.02, fontsize=14)
 
         # Shared legend (one for all facets)
         handles = [Line2D([0],[0], color=PALETTE[m], marker="o", linewidth=1.6, label=m)
                    for m in METHOD_ORDER if m in stats["Method"].unique()]
-        g.fig.legend(handles=handles, labels=[h.get_label() for h in handles],
-                     loc="lower center", frameon=False, ncol=3)
+        labels = [APPROACH_TO_TITLES[h.get_label()] for h in handles]
+        g.figure.legend(handles=handles, labels=labels, loc="center", frameon=False, ncol=3, bbox_to_anchor=(0.5, -0.01))
 
         plt.tight_layout()
-        base = f"estimate_mse-k={k_val}"
+        base = f"estimate_mse-k={k_val}-problem={problem}"
         g.savefig(out_dir / f"{base}.png", dpi=200, bbox_inches="tight")
         g.savefig(out_dir / f"{base}.pdf", bbox_inches="tight")
         plt.close(g.figure)
-
-
 
 def run():
     print(f"Loading results from: {DIR_RESULTS.resolve()}")
     df = load_all_parquets(DIR_RESULTS)
     stats = bootstrap_mse(df, B=1000)
-    plot_mse_facets_by_k(stats, DIR_PLOTS, col_wrap=4)
+    plot_mse_facets_by_k(stats, DIR_PLOTS, col_wrap=3)
     print(f"Saved figures → {DIR_PLOTS.resolve()}")
