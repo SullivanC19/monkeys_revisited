@@ -23,10 +23,6 @@ GP_CMAP = cm.get_cmap("Purples_r")
 ID_COLS  = ["Problem", "Model", "k", "Budget"]
 TRUE_COL = "True Pass@k"
 
-def _slug(s: str, sep: str = "-") -> str:
-    s = unicodedata.normalize("NFKD", str(s)).encode("ascii","ignore").decode("ascii").lower()
-    return re.sub(r"[^a-z0-9]+", sep, s).strip(sep) or "x"
-
 def load_all_parquets(in_dir: Path) -> pd.DataFrame:
     files = sorted(in_dir.glob("*.parquet"))
     if not files:

@@ -2,6 +2,9 @@ from monkeys import analyze
 from pathlib import Path
 import numpy as np
 from math import log10
+import os
+
+os.environ["MPLCONFIGDIR"] = "/tmp/matplotlib"
 
 DATA_SOURCES = [
     ('jailbreaking', analyze.create_or_load_bon_jailbreaking_text_individual_outcomes_df),
@@ -23,8 +26,7 @@ APPROACH_TO_TITLES = {
 
 K_VALUES = list(range(10, 1001, 10))
 BUDGET_VALUES = np.logspace(log10(200), 4, 30, dtype=int, base=10).tolist()  # 200 to 10_000 --> need at least 1 per problem
-print(BUDGET_VALUES)
-N_TRIALS = 100
+N_TRIALS = 3
 SEEDS = list(range(N_TRIALS))
 
 DIR_RESULTS = Path(__file__).parent.parent / 'results'
