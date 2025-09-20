@@ -1,10 +1,12 @@
 from monkeys import analyze
 from pathlib import Path
+import numpy as np
+from math import log10
 
 DATA_SOURCES = [
-    ('jailbreaking', analyze.create_or_load_bon_jailbreaking_text_pass_at_k_df),
-    ('math', analyze.create_or_load_large_language_monkeys_pythia_math_pass_at_k_df),
-    ('code_contests', analyze.create_or_load_large_language_monkeys_code_contests_pass_at_k_df),
+    ('jailbreaking', analyze.create_or_load_bon_jailbreaking_text_individual_outcomes_df),
+    ('math', analyze.create_or_load_large_language_monkeys_pythia_math_individual_outcomes_df),
+    ('code_contests', analyze.create_or_load_large_language_monkeys_code_contests_individual_outcomes_df),
 ]
 
 SOURCES_TO_TITLES = {
@@ -19,9 +21,9 @@ APPROACH_TO_TITLES = {
     "Dynamic": "Dynamic + Beta-Binomial [Ours]",
 }
 
-K_VALUES = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
-BUDGET_VALUES = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
-
+K_VALUES = list(range(10, 1001, 10))
+BUDGET_VALUES = np.logspace(log10(200), 4, 30, dtype=int, base=10).tolist()  # 200 to 10_000 --> need at least 1 per problem
+print(BUDGET_VALUES)
 N_TRIALS = 100
 SEEDS = list(range(N_TRIALS))
 

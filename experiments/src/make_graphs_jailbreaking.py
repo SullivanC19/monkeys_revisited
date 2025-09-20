@@ -298,8 +298,6 @@ def main():
     data = data[['Score', 'Scaling Parameter', 'Problem Idx', 'Model']]
     data = data[data['Scaling Parameter'] == 1].drop('Scaling Parameter', axis=1)
 
-    import pdb; pdb.set_trace()
-
     output_file = 'notebooks/statistical_analysis/data/processed_data/math_shuffled_uniform.csv'
     shuffle = True
 
@@ -321,8 +319,6 @@ def main():
     for i, problem_index in enumerate(individual_data['Problem Idx'].unique()):
         mask = (individual_data['Problem Idx'] == problem_index)
         individual_data.loc[mask, 'Score'] = np.random.binomial(n=1, p = probs[i], size=mask.sum())
-
-    import pdb; pdb.set_trace()
 
     # If you also want to include Benchmark in the grouping:
     data = individual_data.groupby(['Model', 'Problem Idx', 'Benchmark']).agg(

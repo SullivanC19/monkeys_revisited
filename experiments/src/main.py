@@ -5,7 +5,7 @@ from plotters.plot_heatmap import run as plot_heatmap
 if __name__ == "__main__":
     print("Running experiments! 🐳")
 
-    # simulate_pass_at_k_estimation()
+    simulate_pass_at_k_estimation()
     plot_heatmap()
     plot_estimate_mse()
 

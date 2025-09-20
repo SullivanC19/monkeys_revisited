@@ -109,7 +109,8 @@ def plot_mse_facets_by_k(stats: pd.DataFrame, out_dir=DIR_PLOTS, col_wrap=4):
     stats["Method"] = pd.Categorical(stats["Method"], METHOD_ORDER, ordered=True)
     stats["Pair"] = stats["Model"].astype(str) + " — " + stats["Problem"].astype(str)
 
-    for (k_val, problem), gkp in stats.groupby(["k", "Problem"], dropna=False):
+    for (k, problem), gkp in stats.groupby(["k", "Problem"], dropna=False):
+        if k % 100 != 0: continue  # only plot every 100 for readability
         gkp = gkp.sort_values(["Model", "Budget", "Method"])
         models = gkp["Model"].dropna().unique().tolist()
         keep = models[:len(models) // col_wrap * col_wrap]
@@ -123,7 +124,9 @@ def plot_mse_facets_by_k(stats: pd.DataFrame, out_dir=DIR_PLOTS, col_wrap=4):
 
         # Log y-axis and labels per facet
         for ax in g.axes.flat:
+            ax.set_xlim(left=100, right=10000)
             ax.set_yscale("log")
+            ax.set_xscale("log")
             ax.set_xlabel("Budget")
             ax.set_ylabel("MSE vs True Pass@k")
 
@@ -138,7 +141,7 @@ def plot_mse_facets_by_k(stats: pd.DataFrame, out_dir=DIR_PLOTS, col_wrap=4):
         g.figure.legend(handles=handles, labels=labels, loc="center", frameon=False, ncol=3, bbox_to_anchor=(0.5, -0.01))
 
         plt.tight_layout()
-        base = f"estimate_mse-k={k_val}-problem={problem}"
+        base = f"estimate_mse-k={k}-problem={problem}"
         g.savefig(out_dir / f"{base}.png", dpi=200, bbox_inches="tight")
         g.savefig(out_dir / f"{base}.pdf", bbox_inches="tight")
         plt.close(g.figure)
