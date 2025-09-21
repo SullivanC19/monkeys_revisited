@@ -4,6 +4,16 @@ import unicodedata
 import pandas as pd
 import numpy as np
 from typing import Generator, Tuple, Union, List
+from pathlib import Path
+import tqdm
+
+def load_all_parquets(in_dir: Union[str, Path]) -> pd.DataFrame:
+    in_dir = Path(in_dir)
+    files = sorted(in_dir.glob("*.parquet"))
+    if not files:
+        raise FileNotFoundError(f"No parquet files in {in_dir}")
+    df = pd.concat(tqdm.tqdm([pd.read_parquet(p, engine="pyarrow") for p in files]), ignore_index=True)
+    return df
 
 def sanitize(title: str, sep: str = "-") -> str:
     s = unicodedata.normalize("NFKD", str(title)).encode("ascii", "ignore").decode("ascii").lower()

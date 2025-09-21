@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from matplotlib import cm
 
-from constants import DIR_RESULTS, DIR_PLOTS, SOURCES_TO_TITLES, APPROACH_TO_TITLES
-from utilities import sanitize  # for filenames
+from constants import DIR_EST_RESULTS, DIR_PLOTS, SOURCES_TO_TITLES, APPROACH_TO_TITLES
+from utilities import load_all_parquets
 
 # --- theme ---
 sns.set_theme(style="whitegrid")
@@ -22,16 +22,6 @@ GP_CMAP = cm.get_cmap("Purples_r")
 
 ID_COLS  = ["Problem", "Model", "k", "Budget"]
 TRUE_COL = "True Pass@k"
-
-def load_all_parquets(in_dir: Path) -> pd.DataFrame:
-    files = sorted(in_dir.glob("*.parquet"))
-    if not files:
-        raise FileNotFoundError(f"No parquet files in {in_dir}")
-    df = pd.concat([pd.read_parquet(p, engine="pyarrow") for p in files], ignore_index=True)
-    for c in ("Budget","k"):
-        if c in df.columns:
-            df[c] = pd.to_numeric(df[c], errors="coerce")
-    return df
 
 def compute_mean_mse(df: pd.DataFrame) -> pd.DataFrame:
     long = df.melt(
@@ -161,15 +151,22 @@ def plot_mse_heatmaps_by_problem(mse: pd.DataFrame, out_dir: Path, model_order: 
                 )
 
         fig.suptitle(SOURCES_TO_TITLES.get(problem, str(problem)), y=1.02, fontsize=12)
-        base = f"mse_heat_by_problem__{sanitize(problem)}__rows-models_cols-methods"
-        fig.savefig(out_dir / f"{base}.png", dpi=200, bbox_inches="tight")
-        fig.savefig(out_dir / f"{base}.pdf", bbox_inches="tight")
+        heat_out_dir = out_dir / "heatmap"
+        heat_out_dir.mkdir(parents=True, exist_ok=True)
+        base = f"problem={problem}"
+        fig.savefig(heat_out_dir / f"{base}.png", dpi=200, bbox_inches="tight")
+        fig.savefig(heat_out_dir / f"{base}.pdf", bbox_inches="tight")
         plt.close(fig)
 
 
 def run():
-    print(f"Loading results from: {DIR_RESULTS.resolve()}")
-    df  = load_all_parquets(DIR_RESULTS)
+    print(f"Loading results from: {DIR_EST_RESULTS.resolve()}")
+    df  = load_all_parquets(DIR_EST_RESULTS)
+
+    print("Computing statistics...")
     mse = compute_mean_mse(df)
+
+    print("Plotting heatmaps by problem...")
     plot_mse_heatmaps_by_problem(mse, DIR_PLOTS)
+
     print(f"Saved figures → {DIR_PLOTS.resolve()}")

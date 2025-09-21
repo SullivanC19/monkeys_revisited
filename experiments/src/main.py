@@ -2,11 +2,13 @@ from runners.simulate_pass_at_k_estimation import run as simulate_pass_at_k_esti
 from plotters.plot_estimate_mse import run as plot_estimate_mse
 from plotters.plot_estimate_pass_at_k import run as plot_estimate_pass_at_k
 from plotters.plot_heatmap import run as plot_heatmap
+from plotters.plot_attempts_histogram import run as plot_attempts_histogram
 
 if __name__ == "__main__":
     print("Running experiments! 🐳")
 
-    # simulate_pass_at_k_estimation()
+    simulate_pass_at_k_estimation()
+    plot_attempts_histogram()
     plot_estimate_pass_at_k()
     plot_heatmap()
     plot_estimate_mse()

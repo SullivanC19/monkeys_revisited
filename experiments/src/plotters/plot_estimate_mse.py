@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import numpy as np
 
-from constants import DIR_RESULTS, DIR_PLOTS, SOURCES_TO_TITLES, APPROACH_TO_TITLES
+from constants import DIR_EST_RESULTS, DIR_PLOTS, SOURCES_TO_TITLES, APPROACH_TO_TITLES
+from utilities import load_all_parquets
 
 sns.set_theme(style="whitegrid")
 sns.set_context("paper")
@@ -14,22 +15,11 @@ greens = sns.color_palette("Greens", 4)
 purple = sns.color_palette("Purples", 5)[3]
 PALETTE = {"Regression": greens[1], "Discretization": greens[3], "Dynamic": purple}
 
-ID_COLS   = ["Problem","Model","k","Budget"]
+ID_COLS   = ["Problem", "Model", "k", "Budget"]
 TRUE_COL  = "True Pass@k"
 METHOD_ORDER = ["Regression", "Discretization", "Dynamic"]
 METHOD_CAT = CategoricalDtype(METHOD_ORDER, ordered=True)
 METHOD_COLS = [f"{m} Estimate" for m in METHOD_ORDER]
-
-def load_all_parquets(in_dir=DIR_RESULTS) -> pd.DataFrame:
-    files = sorted(in_dir.glob("*.parquet"))
-    if not files:
-        raise FileNotFoundError(f"No parquet files in {in_dir}")
-    df = pd.concat([pd.read_parquet(p, engine="pyarrow") for p in files], ignore_index=True)
-    # ensure numeric
-    for c in ("Budget","k"):
-        if c in df.columns:
-            df[c] = pd.to_numeric(df[c], errors="coerce")
-    return df
 
 def _long_mse(df: pd.DataFrame) -> pd.DataFrame:
     long = df.melt(
@@ -141,14 +131,21 @@ def plot_mse_facets_by_k(stats: pd.DataFrame, out_dir=DIR_PLOTS, col_wrap=4):
         g.figure.legend(handles=handles, labels=labels, loc="center", frameon=False, ncol=3, bbox_to_anchor=(0.5, -0.01))
 
         plt.tight_layout()
+        mse_out_dir = out_dir / "mse"
+        mse_out_dir.mkdir(parents=True, exist_ok=True)
         base = f"estimate_mse-k={k}-problem={problem}"
-        g.savefig(out_dir / f"{base}.png", dpi=200, bbox_inches="tight")
-        g.savefig(out_dir / f"{base}.pdf", bbox_inches="tight")
+        g.savefig(mse_out_dir / f"{base}.png", dpi=200, bbox_inches="tight")
+        g.savefig(mse_out_dir / f"{base}.pdf", bbox_inches="tight")
         plt.close(g.figure)
 
 def run():
-    print(f"Loading results from: {DIR_RESULTS.resolve()}")
-    df = load_all_parquets(DIR_RESULTS)
-    stats = bootstrap_mse(df, B=1000)
+    print(f"Loading results from: {DIR_EST_RESULTS.resolve()}")
+    df = load_all_parquets(DIR_EST_RESULTS)
+
+    print("Bootstrapping MSE for CIs...")
+    stats = bootstrap_mse(df, B=10000)
+
+    print("Plotting MSE facets by k...")
     plot_mse_facets_by_k(stats, DIR_PLOTS, col_wrap=3)
+
     print(f"Saved figures → {DIR_PLOTS.resolve()}")

@@ -3,8 +3,12 @@ from pathlib import Path
 import numpy as np
 from math import log10
 import os
+import seaborn as sns
 
 os.environ["MPLCONFIGDIR"] = "/tmp/matplotlib"
+
+sns.set_theme(style="whitegrid")
+sns.set_context("paper")
 
 DATA_SOURCES = [
     ('jailbreaking', analyze.create_or_load_bon_jailbreaking_text_individual_outcomes_df),
@@ -24,13 +28,21 @@ APPROACH_TO_TITLES = {
     "Dynamic": "Dynamic + Beta-Binomial [Ours]",
 }
 
-K_VALUES = list(range(10, 1001, 10))
-BUDGET_VALUES = np.logspace(log10(200), 4, 30, dtype=int, base=10).tolist()  # 200 to 10_000 --> need at least 1 per problem
+SAMPLER_TO_TITLES = {
+    "Dynamic": "Dynamic Allocation [Ours]",
+    "Uniform": "Uniform Allocation",
+    "Optimal": "Optimal Allocation [Oracle]",
+}
+
+K_VALUES = np.logspace(0, 4, 100, dtype=int, base=10).tolist()
+BUDGET_VALUES = np.logspace(log10(200), 4, 30, dtype=int, base=10).tolist()
 N_TRIALS = 3
 SEEDS = list(range(N_TRIALS))
 
-DIR_RESULTS = Path(__file__).parent.parent / 'results'
-DIR_RESULTS.mkdir(exist_ok=True)
+DIR_EST_RESULTS = Path(__file__).parent.parent / 'results' / 'estimates'
+DIR_ATT_RESULTS = Path(__file__).parent.parent / 'results' / 'attempts'
+DIR_EST_RESULTS.mkdir(parents=True, exist_ok=True)
+DIR_ATT_RESULTS.mkdir(parents=True, exist_ok=True)
 
 DIR_PLOTS = Path(__file__).parent.parent / 'figs'
 DIR_PLOTS.mkdir(exist_ok=True)
