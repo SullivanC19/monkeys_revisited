@@ -64,16 +64,18 @@ def simulate_regression_estimate_of_pass_at_k(samples: list[list[bool]], budget:
     attempt_generators = shuffled_attempt_generators(samples, seed)
 
     # Uniformly distribute sampling budget across subtasks
-    subtask_budgets = evenly_distribute_budget(budget, n_subtasks)
-    subtask_budgets = [min(b, len(samples[i])) for i, b in enumerate(subtask_budgets)]
-    subtask_successes = attempt(attempt_generators, amt=subtask_budgets)
+    subtask_budgets = np.array(evenly_distribute_budget(budget, n_subtasks))
+    subtask_budgets = np.minimum(subtask_budgets, np.array([len(s) for s in samples]))
+    subtask_successes = np.array(attempt(attempt_generators, amt=subtask_budgets.tolist()))
     if np.sum(subtask_successes) == 0:
-        return [0.0] * len(k_values), subtask_budgets, subtask_successes
+        return [0.0] * len(k_values), subtask_budgets.tolist(), subtask_successes.tolist()
+    subtask_successes = subtask_successes[subtask_budgets > 0].tolist()
+    subtask_budgets = subtask_budgets[subtask_budgets > 0].tolist()
 
     # Estimate pass@k for small k values
     small_ks = []
     estimated_pass_at_small_ks = []
-    for small_k in range(1, budget // n_subtasks + 1):
+    for small_k in range(1, budget // len(subtask_budgets) + 1):
         est = np.mean(estimate_pass_at_k(subtask_budgets, subtask_successes, small_k))
         small_ks.append(small_k)
         estimated_pass_at_small_ks.append(est)
@@ -104,11 +106,13 @@ def simulate_discretization_estimate_of_pass_at_k(samples: list[list[bool]], bud
     attempt_generators = shuffled_attempt_generators(samples, seed)
 
     # Uniformly distribute sampling budget across subtasks
-    subtask_budgets = evenly_distribute_budget(budget, n_subtasks)
-    subtask_budgets = [min(b, len(samples[i])) for i, b in enumerate(subtask_budgets)]
-    subtask_successes = attempt(attempt_generators, amt=subtask_budgets)
+    subtask_budgets = np.array(evenly_distribute_budget(budget, n_subtasks))
+    subtask_budgets = np.minimum(subtask_budgets, np.array([len(s) for s in samples]))
+    subtask_successes = np.array(attempt(attempt_generators, amt=subtask_budgets.tolist()))
     if np.sum(subtask_successes) == 0:
-        return [0.0] * len(k_values), subtask_budgets, subtask_successes
+        return [0.0] * len(k_values), subtask_budgets.tolist(), subtask_successes.tolist()
+    subtask_successes = subtask_successes[subtask_budgets > 0].tolist()
+    subtask_budgets = subtask_budgets[subtask_budgets > 0].tolist()
 
     # Fit discretized beta distribution to (num_samples, num_successes) data
     num_samples_and_num_successes_df = pd.DataFrame({
@@ -159,6 +163,49 @@ def simulate_dynamic_estimate_of_pass_at_k(samples: list[list[bool]], budget: in
     estimates = [compute_estimate(beta_2_params, k) for k in k_values]
 
     return estimates, subtask_budgets, subtask_successes
+
+def simulate_uniform_estimate_of_pass_at_k(samples: list[list[bool]], budget: int, k_values: list[int], seed: int=0) -> list[float]:
+    """
+    Simulate the uniform estimate of pass@k given subtask hardness, budget, and k.
+
+    Args:
+        samples (list[list[bool]]): A list of samples for each subtask.
+        budget (int): The total number of attempts allowed.
+        k_values (list[int]): The list of k values for which to estimate pass@k.
+
+    Returns:
+        float: The dynamic estimate of pass@k.
+    """
+    n_subtasks = len(samples)
+    attempt_generators = shuffled_attempt_generators(samples, seed)
+
+    # Uniformly distribute sampling budget across subtasks
+    subtask_budgets = evenly_distribute_budget(budget, n_subtasks)
+    subtask_budgets = [min(b, len(samples[i])) for i, b in enumerate(subtask_budgets)]
+    subtask_successes = attempt(attempt_generators, amt=subtask_budgets)
+    if np.sum(subtask_successes) == 0:
+        return [0.0] * len(k_values), subtask_budgets, subtask_successes
+
+    # Find maximum likelihood parameters for beta-binomial distribution
+    num_samples_and_num_successes_df = pd.DataFrame({
+        "Num. Samples Total": subtask_budgets,
+        "Num. Samples Correct": subtask_successes,
+    })
+    beta_2_params = fit_beta_binomial_two_parameters_to_num_samples_and_num_successes(num_samples_and_num_successes_df)
+
+    # Compute estimate of pass@k using fitted (alpha, beta, scale) parameters
+    estimates = [compute_estimate(beta_2_params, k) for k in k_values]
+
+    return estimates, subtask_budgets, subtask_successes
+
+def get_optimal_allocation(hardness: list[float], k: int=1000) -> list[float]:
+    r_hardness = 1 - np.array(hardness)
+    log_hardness = np.log(np.clip(r_hardness, 1e-8, 1 - 1e-8))
+    log_weights = ((2 * k - 1) * log_hardness + np.log(1 - np.exp(log_hardness))) / 2
+    log_weights -= np.max(log_weights)  # numerical stability
+    weights = np.exp(log_weights - np.max(log_weights)).tolist()
+    total = sum(weights)
+    return [w / total for w in weights]
 
 def run_single(
     problem: str,
@@ -215,25 +262,28 @@ def run_single(
 def run():
     for problem, gen in DATA_SOURCES:
         for model, samples in extract_models_with_samples(gen()):
-            print(f"Simulating {model} on {problem} with {len(samples)} subtasks... (~10 minutes)")
+            f_base = f"{sanitize(problem)}_{sanitize(model)}.parquet"
             tasks = (
                 (problem, model, samples, budget, seed)
                 for budget in BUDGET_VALUES
                 for seed in SEEDS
             )
+
+            # Run simulations in parallel
+            print(f"Running simulations for {model} on {problem} with {len(samples)} subtasks... (~10 minutes)")
             with mp.Pool(processes=mp.cpu_count()) as pool:
                 results = pool.starmap(run_single, tasks)
 
             # Extract and save entries
-            out_path_est = DIR_EST_RESULTS / f"{sanitize(problem)}_{sanitize(model)}.parquet"
+            print(f"  Writing estimation results...")
             all_est_entries = [item for res in results for item in res["est_entries"]]
             df = pd.DataFrame(all_est_entries).convert_dtypes(dtype_backend="pyarrow")
-            df.to_parquet(out_path_est, engine="pyarrow", index=False, compression="snappy")
-            print(f"Wrote {len(df)} rows → {out_path_est}")
+            df.to_parquet(DIR_EST_RESULTS / f_base, engine="pyarrow", index=False, compression="snappy")
+            print(f"  Wrote {len(df)} rows → {DIR_EST_RESULTS / f_base}")
 
-            # Extract and save attempts summary
-            out_path_att= DIR_ATT_RESULTS / f"{sanitize(problem)}_{sanitize(model)}.parquet"
+            # Extract and save attempts
+            print(f"  Writing attempts...")
             all_att_entries = [res["att_entry"] for res in results]
             attempts_df = pd.DataFrame(all_att_entries).convert_dtypes(dtype_backend="pyarrow")
-            attempts_df.to_parquet(out_path_att, engine="pyarrow", index=False)
-            print(f"Wrote {len(attempts_df)} rows → {out_path_att}")
+            attempts_df.to_parquet(DIR_ATT_RESULTS / f_base, engine="pyarrow", index=False)
+            print(f"  Wrote {len(attempts_df)} rows → {DIR_ATT_RESULTS / f_base}")

@@ -39,22 +39,12 @@ def compute_mean_mse(df: pd.DataFrame) -> pd.DataFrame:
                .reset_index())
     return mse
 
-def _pivot_mse(g: pd.DataFrame) -> pd.DataFrame:
-    g = g.copy()
-    g["Budget"] = pd.to_numeric(g["Budget"], errors="coerce")
-    g["k"] = pd.to_numeric(g["k"], errors="coerce")
-    pivot = (g.pivot_table(index="k", columns="Budget", values="MSE", aggfunc="mean")
-               .sort_index(axis=0)
-               .sort_index(axis=1))
-    return pivot.astype("float64")
-
 def plot_mse_heatmaps_by_problem(mse: pd.DataFrame, out_dir: Path, model_order: list[str] | None = None):
     out_dir.mkdir(parents=True, exist_ok=True)
     mse = mse.copy()
     mse["Method"] = pd.Categorical(mse["Method"], METHOD_ORDER, ordered=True)
 
     for problem, gp in mse.groupby("Problem", dropna=False):
-        # facet transpose: rows = models, cols = methods
         models = (sorted(gp["Model"].dropna().unique().tolist())
                   if model_order is None else model_order)
         n_rows, n_cols = len(models), len(METHOD_ORDER)
@@ -72,7 +62,6 @@ def plot_mse_heatmaps_by_problem(mse: pd.DataFrame, out_dir: Path, model_order: 
             axes[0, c].set_title(APPROACH_TO_TITLES[method])
 
         for r, model in enumerate(models):
-            # --- per-row scaling: collect all valid MSE values for this model across all methods ---
             row_vals = gp.loc[gp["Model"] == model, "MSE"].to_numpy(dtype=float)
             row_vals = row_vals[np.isfinite(row_vals) & (row_vals > 0)]
             if row_vals.size == 0:
@@ -162,6 +151,7 @@ def plot_mse_heatmaps_by_problem(mse: pd.DataFrame, out_dir: Path, model_order: 
 def run():
     print(f"Loading results from: {DIR_EST_RESULTS.resolve()}")
     df  = load_all_parquets(DIR_EST_RESULTS)
+    df = df[(df["k"] >= 100)]
 
     print("Computing statistics...")
     mse = compute_mean_mse(df)

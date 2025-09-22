@@ -12,12 +12,16 @@ sns.set_theme(style="whitegrid")
 sns.set_context("paper")
 
 greens = sns.color_palette("Greens", 4)
-purple = sns.color_palette("Purples", 5)[3]
-PALETTE = {"Regression": greens[1], "Discretization": greens[3], "Dynamic": purple}
+purples = sns.color_palette("Purples", 5)
+PALETTE = {
+    "Regression": greens[1],
+    "Discretization": greens[3],
+    "Dynamic": purples[3],
+}
 
 ID_COLS   = ["Problem", "Model", "k", "Budget"]
 TRUE_COL  = "True Pass@k"
-METHOD_ORDER = ["Regression", "Discretization", "Dynamic"]
+METHOD_ORDER = ["Regression", "Discretization", "Dynamic", "Optimal"]
 METHOD_CAT = CategoricalDtype(METHOD_ORDER, ordered=True)
 METHOD_COLS = [f"{m} Estimate" for m in METHOD_ORDER]
 
@@ -77,30 +81,12 @@ def bootstrap_mse(df: pd.DataFrame, B: int = 1000, seed: int | None = 0) -> pd.D
         out["Method"] = out["Method"].astype(METHOD_CAT)
     return out
 
-
-def compute_mse_long(df: pd.DataFrame) -> pd.DataFrame:
-    long = df.melt(
-        id_vars=[c for c in ["Problem","Model","k","Budget"] if c in df.columns] + ["True Pass@k"],
-        value_vars=[c for c in ["Regression Estimate","Discretization Estimate","Dynamic Estimate"] if c in df.columns],
-        var_name="Method",
-        value_name="Estimate",
-    )
-    long["Method"] = long["Method"].str.replace(" Estimate", "", regex=False)
-    long["SE"] = (pd.to_numeric(long["Estimate"], errors="coerce")
-                  - pd.to_numeric(long["True Pass@k"], errors="coerce")) ** 2
-    agg = (long.groupby(["Problem","Model","k","Budget","Method"], dropna=False)["SE"]
-                 .agg(MSE="mean", SD="std", N="count")
-                 .reset_index())
-    agg["SD"] = agg["SD"].fillna(0.0)  # if only one seed, std is NaN → 0
-    return agg
-
 def plot_mse_facets_by_k(stats: pd.DataFrame, out_dir=DIR_PLOTS, col_wrap=4):
     stats = stats.copy()
     stats["Method"] = pd.Categorical(stats["Method"], METHOD_ORDER, ordered=True)
     stats["Pair"] = stats["Model"].astype(str) + " — " + stats["Problem"].astype(str)
 
     for (k, problem), gkp in stats.groupby(["k", "Problem"], dropna=False):
-        if k % 100 != 0: continue  # only plot every 100 for readability
         gkp = gkp.sort_values(["Model", "Budget", "Method"])
         models = gkp["Model"].dropna().unique().tolist()
         keep = models[:len(models) // col_wrap * col_wrap]

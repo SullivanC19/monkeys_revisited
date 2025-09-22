@@ -9,8 +9,8 @@ from constants import DIR_EST_RESULTS, DIR_PLOTS, SOURCES_TO_TITLES, APPROACH_TO
 from utilities import load_all_parquets
 
 greens = sns.color_palette("Greens", 4)
-purple = sns.color_palette("Purples", 5)[3]
-PALETTE = {"Regression": greens[1], "Discretization": greens[3], "Dynamic": purple}
+purples = sns.color_palette("Purples", 5)
+PALETTE = {"Regression": greens[1], "Discretization": greens[3], "Dynamic": purples[3]}
 
 ID_COLS   = ["Problem", "Model", "k", "Budget"]
 TRUE_COL  = "True Pass@k"

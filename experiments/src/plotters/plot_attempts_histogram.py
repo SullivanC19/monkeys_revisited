@@ -132,7 +132,7 @@ def plot_attempts_histograms_per_problem_budget(
     """
     Create ONE histogram figure per (Problem, Budget), with facets (subplots) per Model.
     """
-    out_dir = Path(out_dir) / "attempts_over_hardness" / "per_problem_budget_hist"
+    out_dir = Path(out_dir) / "attempts_over_hardness"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     df = long_df.copy()

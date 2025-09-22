@@ -8,6 +8,9 @@ from pathlib import Path
 import tqdm
 
 def load_all_parquets(in_dir: Union[str, Path]) -> pd.DataFrame:
+    """
+    Load and concatenate all parquet files in the specified directory into a single DataFrame.
+    """
     in_dir = Path(in_dir)
     files = sorted(in_dir.glob("*.parquet"))
     if not files:
@@ -16,6 +19,10 @@ def load_all_parquets(in_dir: Union[str, Path]) -> pd.DataFrame:
     return df
 
 def sanitize(title: str, sep: str = "-") -> str:
+    """
+    Sanitize a string to be filesystem-friendly, typically used for model names.
+    Converts to lowercase, removes non-alphanumeric characters, and replaces spaces with the specified separator.
+    """
     s = unicodedata.normalize("NFKD", str(title)).encode("ascii", "ignore").decode("ascii").lower()
     s = re.sub(r"[^a-z0-9]+", sep, s)
     s = re.sub(re.escape(sep) + r"{2,}", sep, s).strip(sep + " ._")
@@ -49,7 +56,7 @@ def evenly_distribute_budget(budget: int, n_subtasks: int) -> List[int]:
 
 def extract_models_with_samples(df: pd.DataFrame) -> Generator[Tuple[str, np.ndarray], None, None]:
     """
-    Given a DataFrame with columns ['Score', 'Scaling Parameter', 'Problem Idx', 'Model'],
+    Given a DataFrame of LLM samples with columns ['Score', 'Problem Idx', 'Model'],
     yield tuples of (model_name, samples) for each unique model.
     """
     required_columns = {'Score', 'Problem Idx', 'Model'}
