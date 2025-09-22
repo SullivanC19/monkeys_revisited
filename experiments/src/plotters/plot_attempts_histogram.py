@@ -170,7 +170,7 @@ def plot_attempts_histograms_per_problem_budget(
             axes[j].axis("off")
 
         problem_title = SOURCES_TO_TITLES.get(problem, str(problem))
-        fig.suptitle(f"Attempt Allocation for {problem_title} — Budget={int(budget)}", y=0.98, fontsize=14)
+        fig.suptitle(f"Attempt Allocation for {problem_title}", y=0.98, fontsize=14)
 
         # Add shared legend at the bottom
         _legend(fig)
