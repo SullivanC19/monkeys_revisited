@@ -10,7 +10,11 @@ from utilities import load_all_parquets
 
 greens = sns.color_palette("Greens", 4)
 purples = sns.color_palette("Purples", 5)
-PALETTE = {"Regression": greens[1], "Discretization": greens[3], "Dynamic": purples[3]}
+PALETTE = {
+    "Regression": greens[1],
+    "Discretization": greens[3],
+    "Dynamic": purples[3],
+}
 
 ID_COLS   = ["Problem", "Model", "k", "Budget"]
 TRUE_COL  = "True Pass@k"

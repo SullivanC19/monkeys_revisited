@@ -1,11 +1,7 @@
-from itertools import chain
-import re
-import unicodedata
 import numpy as np
 import pandas as pd
 import multiprocessing as mp
 from sklearn.linear_model import LinearRegression
-from pathlib import Path
 
 from constants import DATA_SOURCES, BUDGET_VALUES, K_VALUES, SEEDS, DIR_EST_RESULTS, DIR_ATT_RESULTS
 from utilities import (
@@ -201,8 +197,8 @@ def simulate_uniform_estimate_of_pass_at_k(samples: list[list[bool]], budget: in
 def get_optimal_allocation(hardness: list[float], k: int=1000) -> list[float]:
     r_hardness = 1 - np.array(hardness)
     log_hardness = np.log(np.clip(r_hardness, 1e-8, 1 - 1e-8))
-    log_weights = ((2 * k - 1) * log_hardness + np.log(1 - np.exp(log_hardness))) / 2
-    log_weights -= np.max(log_weights)  # numerical stability
+    log_weights = ((2 * k - 1) * log_hardness + np.log(1 - np.exp(log_hardness))) * 2 / 3
+    log_weights -= np.max(log_weights)
     weights = np.exp(log_weights - np.max(log_weights)).tolist()
     total = sum(weights)
     return [w / total for w in weights]

@@ -21,7 +21,7 @@ PALETTE = {
 
 ID_COLS   = ["Problem", "Model", "k", "Budget"]
 TRUE_COL  = "True Pass@k"
-METHOD_ORDER = ["Regression", "Discretization", "Dynamic", "Optimal"]
+METHOD_ORDER = ["Regression", "Discretization", "Dynamic"]
 METHOD_CAT = CategoricalDtype(METHOD_ORDER, ordered=True)
 METHOD_COLS = [f"{m} Estimate" for m in METHOD_ORDER]
 

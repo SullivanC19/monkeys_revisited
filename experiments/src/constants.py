@@ -34,8 +34,8 @@ SAMPLER_TO_TITLES = {
     "Optimal": "Optimal Allocation [Oracle]",
 }
 
-K_VALUES = np.logspace(1, 3, 20, dtype=int, base=10).tolist()
-BUDGET_VALUES = np.logspace(2, 4, 10, dtype=int, base=10).tolist()
+K_VALUES = np.logspace(1, 3, 40, dtype=int, base=10).tolist()
+BUDGET_VALUES = np.logspace(2, 4, 20, dtype=int, base=10).tolist()
 N_TRIALS = 100
 SEEDS = list(range(N_TRIALS))
 
