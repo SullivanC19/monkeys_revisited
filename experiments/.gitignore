@@ -1,5 +1,3 @@
 results/
 figs/
 __pycache__/
-
-!experiments/figs/pass_at_k/problem=jailbreaking-budget=10000.png

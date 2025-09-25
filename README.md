@@ -1,6 +1,6 @@
-# Efficient Prediction of Pass@k Scaling in Large Language Models
+# Efficient Prediction of Pass@k Scaling in LLMs
 
-![combined_statistical_plots.png](experiments/figs/pass_at_k/problem=jailbreaking-budget=10000.png)
+![preview.png](preview.png)
 
 ## Setup & Execution
 
