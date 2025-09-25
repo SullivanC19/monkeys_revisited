@@ -197,7 +197,7 @@ def simulate_uniform_estimate_of_pass_at_k(samples: list[list[bool]], budget: in
 def get_optimal_allocation(hardness: list[float], k: int=1000) -> list[float]:
     r_hardness = 1 - np.array(hardness)
     log_hardness = np.log(np.clip(r_hardness, 1e-8, 1 - 1e-8))
-    log_weights = ((2 * k - 1) * log_hardness + np.log(1 - np.exp(log_hardness))) * 2 / 3
+    log_weights = ((2 * k - 1) * log_hardness + np.log(1 - np.exp(log_hardness))) * 1 / 2
     log_weights -= np.max(log_weights)
     weights = np.exp(log_weights - np.max(log_weights)).tolist()
     total = sum(weights)

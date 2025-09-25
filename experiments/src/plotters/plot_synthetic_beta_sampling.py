@@ -24,7 +24,7 @@ def _beta_pdf(x: np.ndarray, alpha: float, beta: float) -> np.ndarray:
     return np.exp((alpha - 1) * np.log(x) + (beta - 1) * np.log(1 - x) - logB)
 
 def run():
-    n_samples = 1000
+    n_samples = 10000
     b = 100
 
     rng = np.random.default_rng(0)
@@ -73,11 +73,11 @@ def run():
 
     # Discretized Beta pdf scaled to [0, scale_dsc]
     y_dsc = (1/scale_dsc) * _beta_pdf(x / scale_dsc, alpha_dsc, beta_dsc)
-    ax.plot(x, y_dsc, color=GREEN, linewidth=1, linestyle='-', label=f"Discretized fit (α={alpha_dsc:.2f}, β={beta_dsc:.2f})")
+    ax.plot(x, y_dsc, color=GREEN, linewidth=1, linestyle='-', label=f"Discretized fit (α={alpha_dsc:.3f}, β={beta_dsc:.3f})")
 
     # Our two-parameter Beta pdf (assumes support [0,1])
     y_our = _beta_pdf(x, alpha_our, beta_our)
-    ax.plot(x, y_our, color=PURPLE, linewidth=1, linestyle='--', label=f"Our fit (α={alpha_our:.2f}, β={beta_our:.2f})")
+    ax.plot(x, y_our, color=PURPLE, linewidth=1, linestyle='--', label=f"Our fit (α={alpha_our:.3f}, β={beta_our:.3f})")
 
     # Labels and legend
     ax.set_xlabel("Latent success probability")

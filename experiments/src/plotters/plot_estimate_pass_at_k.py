@@ -154,7 +154,7 @@ def plot_passk_over_k_by_budget(stats_est: pd.DataFrame, out_dir=DIR_PLOTS, col_
 
         # Titles & legend
         g.set_titles(col_template="{col_name}")
-        g.figure.suptitle(f"Prediction pass@k for {SOURCES_TO_TITLES[problem]}",
+        g.figure.suptitle(f"Predicted pass@k for {SOURCES_TO_TITLES[problem]}",
                           y=1.02, fontsize=14)
 
         method_handles = [Line2D([0],[0], color=PALETTE[m], linewidth=0.8, label=m)

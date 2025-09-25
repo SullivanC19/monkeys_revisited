@@ -12,7 +12,6 @@ from matplotlib import cm
 from constants import DIR_EST_RESULTS, DIR_PLOTS, SOURCES_TO_TITLES, APPROACH_TO_TITLES
 from utilities import load_all_parquets
 
-# --- theme ---
 sns.set_theme(style="whitegrid")
 sns.set_context("paper", font_scale=0.85)
 
@@ -47,63 +46,71 @@ def plot_mse_heatmaps_by_problem(mse: pd.DataFrame, out_dir: Path, model_order: 
     for problem, gp in mse.groupby("Problem", dropna=False):
         models = (sorted(gp["Model"].dropna().unique().tolist())
                   if model_order is None else model_order)
-        n_rows, n_cols = len(models), len(METHOD_ORDER)
+        n_rows, n_cols = len(METHOD_ORDER), len(models)  # rows = approaches, cols = models
         if n_rows == 0 or n_cols == 0:
             continue
 
         fig, axes = plt.subplots(
-            n_rows, n_cols, figsize=(3.6*n_cols, 3.0*n_rows),
+            n_rows, n_cols, figsize=(2*n_cols, 3.0*n_rows),
             sharex=True, sharey=True, constrained_layout=True
         )
         axes = np.atleast_2d(axes)
 
-        # Column headers = methods (top row)
-        for c, method in enumerate(METHOD_ORDER):
-            axes[0, c].set_title(APPROACH_TO_TITLES[method])
+        # Column headers = models (top row)
+        for c, model in enumerate(models):
+            axes[0, c].set_title(str(model))
 
-        for r, model in enumerate(models):
-            row_vals = gp.loc[gp["Model"] == model, "MSE"].to_numpy(dtype=float)
-            row_vals = row_vals[np.isfinite(row_vals) & (row_vals > 0)]
-            if row_vals.size == 0:
-                # hide whole row if nothing to plot
-                for c in range(n_cols):
+        # Compute vmin/vmax for each column (per-model scaling)
+        col_norms: dict[str, LogNorm] = {}
+        for c, model in enumerate(models):
+            col_vals = gp.loc[gp["Model"] == model, "MSE"].to_numpy(dtype=float)
+            col_vals = col_vals[np.isfinite(col_vals) & (col_vals > 0)]
+            if col_vals.size == 0:
+                for r in range(n_rows):
                     axes[r, c].set_visible(False)
                 continue
-
-            vmin = max(1e-12, float(np.nanmin(row_vals)))
-            vmax = float(np.nanmax(row_vals))
+            vmin = max(1e-12, float(np.nanmin(col_vals)))
+            vmax = float(np.nanmax(col_vals))
             if not np.isfinite(vmax) or vmax <= 0:
-                for c in range(n_cols):
+                for r in range(n_rows):
                     axes[r, c].set_visible(False)
                 continue
             if vmax <= vmin:
                 vmax = vmin * 10.0
-            row_norm = LogNorm(vmin=vmin, vmax=vmax)
+            col_norms[model] = LogNorm(vmin=vmin, vmax=vmax)
 
-            last_row_im = None  # track a mappable for the row colorbar
+        # Track a mappable in each column
+        last_col_im = {model: None for model in models}
 
-            for c, method in enumerate(METHOD_ORDER):
+        for r, method in enumerate(METHOD_ORDER):
+            for c, model in enumerate(models):
                 ax = axes[r, c]
+                if model not in col_norms:
+                    ax.set_visible(False)
+                    continue
+
                 gm = gp[(gp["Method"] == method) & (gp["Model"] == model)]
                 if gm.empty:
                     ax.set_visible(False)
                     continue
 
-                pivot = (gm.pivot_table(index="k", columns="Budget", values="MSE", aggfunc="mean")
-                           .sort_index(axis=0).sort_index(axis=1))
-                # ensure numeric + mask NaNs
+                pivot = (
+                    gm.pivot_table(index="k", columns="Budget", values="MSE", aggfunc="mean")
+                      .sort_index(axis=0).sort_index(axis=1)
+                )
                 if pivot.size == 0 or pivot.isna().all().all():
                     ax.set_visible(False)
                     continue
+
                 pivot = pivot.astype("float64")
-
                 im = sns.heatmap(
-                    pivot, ax=ax, cmap=GP_CMAP, norm=row_norm, cbar=False,
-                    mask=pivot.isna(), linewidths=0
+                    pivot, ax=ax, cmap=GP_CMAP, norm=col_norms[model], cbar=False,
+                    mask=pivot.isna(), linewidths=0,
+                    yticklabels=1,
                 )
-                last_row_im = im
+                last_col_im[model] = im
 
-                # axes labels: only put y on first col, x on bottom row to avoid clutter
+                # Clean labeling
                 if c == 0:
                     ax.set_ylabel("k")
                 else:
@@ -113,33 +120,33 @@ def plot_mse_heatmaps_by_problem(mse: pd.DataFrame, out_dir: Path, model_order: 
                 else:
                     ax.set_xlabel("")
 
-            # --- add a right-side colorbar for this row only ---
-            if last_row_im is not None:
-                # attach the colorbar to all axes in the row so its height matches the row
-                fig.colorbar(
-                    last_row_im.collections[0],
-                    ax=axes[r, :].ravel().tolist(),
-                    location="right",
-                    fraction=0.046,
-                    pad=0.04,
-                    label="Mean Squared Error"
-                )
+                ax.invert_yaxis()
 
-            # --- add the row label (model) on the left margin of the first visible cell ---
-            left_ax = None
-            for c in range(n_cols):
-                if axes[r, c].get_visible():
-                    left_ax = axes[r, c]
-                    break
-            if left_ax is not None:
-                left_ax.text(
-                    -0.20, 0.5, str(model),
-                    transform=left_ax.transAxes,
-                    rotation=90, va="center", ha="right",
-                    fontsize=11, color="black", clip_on=False
-                )
+            right_ax = axes[r, -1]
+            right_ax.text(
+                1.12, 0.5, APPROACH_TO_TITLES.get(method, method),
+                transform=right_ax.transAxes,
+                rotation=-90, va="center", ha="right",
+                fontsize=10, clip_on=False
+            )
 
-        fig.suptitle(SOURCES_TO_TITLES.get(problem, str(problem)), y=1.02, fontsize=12)
+
+        # --- Add a horizontal colorbar for each column ---
+        for c, model in enumerate(models):
+            im = last_col_im.get(model)
+            if im is None:
+                continue
+            fig.colorbar(
+                im.collections[0],
+                ax=axes[:, c].ravel().tolist(),
+                orientation="horizontal",
+                location="bottom",
+                fraction=0.046,  # controls thickness
+                pad=0.03,        # controls distance from the heatmaps
+                label="Mean Squared Error"
+            )
+
+        fig.suptitle(SOURCES_TO_TITLES.get(problem, str(problem)), y=1.04, fontsize=12)
         heat_out_dir = out_dir / "heatmap"
         heat_out_dir.mkdir(parents=True, exist_ok=True)
         base = f"problem={problem}"

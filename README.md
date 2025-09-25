@@ -1,23 +1,13 @@
-# How Do Large Language Monkeys Get Their Power (Laws)?
+# Efficient Prediction of Pass@k Scaling in Large Language Models
 
-![combined_statistical_plots.png](notebooks/90_schematic_attempt_1/results/combined_statistical_plots.png)
+![combined_statistical_plots.png](experiments/figs/pass_at_k/problem=jailbreaking-budget=10000.png)
 
-## Installation
+## Setup & Execution
 
-1. (Optional) Update conda:
+1. Build the docker image
 
-`conda update -n base -c defaults conda -y`
+`docker build -f experiments/Dockerfile -t experiments .`
 
-2. Create and activate the conda environment:
+2. Run all experiments and generate all plots (2-4 hours).
 
-`conda create -n origin_of_scaling_env python=3.11 -y && conda activate origin_of_scaling_env`
-
-3. Install the required packages:
-
-`conda install -c conda-forge numpy pandas scipy matplotlib seaborn pyarrow fsspec datasets huggingface_hub -y`
-
-4. If generating the Many-Shot In-Context Learning data:
-
-`conda install pytorch-gpu torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia -y`
-
-`pip install protobuf sentencepiece`# monkeys_revisited
+`docker run --rm -it -v "$PWD:/app" experiments`

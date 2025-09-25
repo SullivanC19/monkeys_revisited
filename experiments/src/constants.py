@@ -17,14 +17,14 @@ DATA_SOURCES = [
 ]
 
 SOURCES_TO_TITLES = {
-    'jailbreaking': 'BON Jailbreaking',
+    'jailbreaking': 'AdvBench',
     'math': 'MATH',
     'code_contests': 'Code Contests',
 }
 
 APPROACH_TO_TITLES = {
     "Regression": "Regression [OpenAI]",
-    "Discretization": "Discretized Beta [Schaeffer et al. 2025]",
+    "Discretization": "Discretized Beta [Schaeffer et al.]",
     "Dynamic": "Dynamic + Beta-Binomial [Ours]",
 }
 
