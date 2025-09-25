@@ -2,7 +2,7 @@
 
 ![preview.png](preview.png)
 
-## Setup & Execution
+## Reproducibility Script
 
 1. Build the docker image
 
