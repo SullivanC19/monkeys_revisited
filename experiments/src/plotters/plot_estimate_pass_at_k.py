@@ -78,7 +78,7 @@ def bootstrap_estimates(df: pd.DataFrame, B: int = 1000, seed: int | None = 0) -
         out["Method"] = out["Method"].astype(METHOD_CAT)
     return out
 
-def _facet_panel_over_k_with_truth(data: pd.DataFrame, **kwargs):
+def _facet_panel_over_k_with_truth(data: pd.DataFrame, budget: int=None, **kwargs):
     """
     Plot method estimates vs k (x-axis), with CI ribbons, plus dashed true pass@k vs k.
     Assumes columns: k, Method, center, low, high, True Pass@k.
@@ -107,10 +107,12 @@ def _facet_panel_over_k_with_truth(data: pd.DataFrame, **kwargs):
                     color="black", label="True Pass@k")
             
     # Highlight low-k region
-    k_th = data[SUBP_COL].mode().iloc[0]
-    ax.axvspan(xmin=ax.get_xlim()[0], xmax=k_th, 
-               facecolor="gray", alpha=0.2)
-    ax.axvline(k_th, color="gray", linestyle="--")
+    if budget is not None:
+        m = data[SUBP_COL].mode().iloc[0]
+        k_th = budget / m
+        ax.axvspan(xmin=ax.get_xlim()[0], xmax=k_th, 
+                facecolor="gray", alpha=0.2)
+        ax.axvline(k_th, color="gray", linestyle="--")
 
 def plot_passk_over_k_by_budget(stats_est: pd.DataFrame, out_dir=DIR_PLOTS, col_wrap=4, budgets: list | None = None):
     """
@@ -137,7 +139,7 @@ def plot_passk_over_k_by_budget(stats_est: pd.DataFrame, out_dir=DIR_PLOTS, col_
         g = sns.FacetGrid(
             gb, col="Model", col_wrap=col_wrap, sharex=True, sharey=True, despine=True
         )
-        g.map_dataframe(_facet_panel_over_k_with_truth)
+        g.map_dataframe(_facet_panel_over_k_with_truth, budget=budget)
 
         # Axes formatting
         for ax in g.axes.flat:

@@ -23,7 +23,7 @@ SOURCES_TO_TITLES = {
 }
 
 APPROACH_TO_TITLES = {
-    "Regression": "Regression [OpenAI]",
+    "Regression": "Regression",
     "Discretization": "Discretized Beta [Schaeffer et al.]",
     "Dynamic": "Dynamic + Beta-Binomial [Ours]",
 }
