@@ -19,6 +19,56 @@ from monkeys.analyze import (
 )
 from monkeys.EM import compute_estimate
 
+
+def uniform_sampling(budget: int, samples: list[int], seed: int=0) -> tuple[list[int], list[int]]:
+    """
+    Evenly distribute sampling budget across subtasks and simulate attempts.
+
+    Args:
+        budget (int): The total number of attempts allowed.
+        samples (list[int]): An array of subtask samples (between 0 and 1).
+        seed (int): Random seed for reproducibility.
+
+    Returns:
+        tuple[list[int], list[int]]: The number of attempts and successes for each subtask.
+    """
+    n_subtasks = len(samples)
+    attempt_generators, max_attempts = shuffled_attempt_generators(samples, seed=seed)
+    subtask_budgets = evenly_distribute_budget(budget, n_subtasks)
+    subtask_budgets = np.minimum(subtask_budgets, np.array(max_attempts))
+    subtask_successes = attempt(attempt_generators, amt=subtask_budgets.tolist())
+    subtask_successes = np.array(subtask_successes)
+    subtask_budgets = np.array(subtask_budgets)
+    return subtask_budgets, subtask_successes
+
+def dynamic_sampling(budget: int, samples: list[int], seed: int=0) -> tuple[list[int], list[int]]:
+    """
+    Dynamically allocate sampling budget across subtasks based on fewest successes and attempts.
+    
+    Args:
+        budget (int): The total number of attempts allowed.
+        n_subtasks (int): The number of subtasks.
+        samples (list[int]): An array of subtask samples (between 0 and 1).
+        seed (int): Random seed for reproducibility.
+
+    Returns:
+        tuple[list[int], list[int]]: The number of attempts and successes for each subtask.
+    """
+    n_subtasks = len(samples)
+    attempt_generators, max_attempts = shuffled_attempt_generators(samples, seed=seed)
+    rng = np.random.default_rng(seed)
+    permutation = rng.permutation(n_subtasks)
+    subtask_budgets = [0] * n_subtasks
+    subtask_successes = [0] * n_subtasks
+    for _ in range(budget):
+        selected = np.lexsort((permutation, subtask_budgets, subtask_successes))[0]
+        if subtask_budgets[selected] < max_attempts[selected]:
+            subtask_budgets[selected] += 1
+            subtask_successes[selected] += attempt(attempt_generators[selected])
+    subtask_budgets = np.array(subtask_budgets)
+    subtask_successes = np.array(subtask_successes)
+    return subtask_budgets, subtask_successes
+
 def compute_hardness(samples: list[list[bool]]) -> list[float]:
     """
     Compute the hardness of each subtask given an array of subtask samples.
@@ -56,15 +106,11 @@ def simulate_regression_estimate_of_pass_at_k(samples: list[list[bool]], budget:
     Returns:
         float: The regression estimate of pass@k.
     """
-    n_subtasks = len(samples)
-    attempt_generators = shuffled_attempt_generators(samples, seed)
-
-    # Uniformly distribute sampling budget across subtasks
-    subtask_budgets = np.array(evenly_distribute_budget(budget, n_subtasks))
-    subtask_budgets = np.minimum(subtask_budgets, np.array([len(s) for s in samples]))
-    subtask_successes = np.array(attempt(attempt_generators, amt=subtask_budgets.tolist()))
+    subtask_budgets, subtask_successes = uniform_sampling(budget, samples, seed=seed)
+    
     if np.sum(subtask_successes) == 0:
         return [0.0] * len(k_values), subtask_budgets.tolist(), subtask_successes.tolist()
+        
     subtask_successes = subtask_successes[subtask_budgets > 0].tolist()
     subtask_budgets = subtask_budgets[subtask_budgets > 0].tolist()
 
@@ -86,7 +132,7 @@ def simulate_regression_estimate_of_pass_at_k(samples: list[list[bool]], budget:
 
     return estimates, subtask_budgets, subtask_successes
 
-def simulate_discretization_estimate_of_pass_at_k(samples: list[list[bool]], budget: int, k_values: list[int], seed: int=0) -> list[float]:
+def simulate_discretization_estimate_of_pass_at_k(samples: list[list[bool]], budget: int, k_values: list[int], dynamic: bool=False, seed: int=0) -> list[float]:
     """
     Simulate the discretization estimate of pass@k given subtask hardness, budget, and k values.
 
@@ -98,13 +144,11 @@ def simulate_discretization_estimate_of_pass_at_k(samples: list[list[bool]], bud
     Returns:
         float: The discretization estimate of pass@k.
     """
-    n_subtasks = len(samples)
-    attempt_generators = shuffled_attempt_generators(samples, seed)
+    if dynamic:
+        subtask_budgets, subtask_successes = dynamic_sampling(budget, samples, seed=seed)
+    else:
+        subtask_budgets, subtask_successes = uniform_sampling(budget, samples, seed=seed)
 
-    # Uniformly distribute sampling budget across subtasks
-    subtask_budgets = np.array(evenly_distribute_budget(budget, n_subtasks))
-    subtask_budgets = np.minimum(subtask_budgets, np.array([len(s) for s in samples]))
-    subtask_successes = np.array(attempt(attempt_generators, amt=subtask_budgets.tolist()))
     if np.sum(subtask_successes) == 0:
         return [0.0] * len(k_values), subtask_budgets.tolist(), subtask_successes.tolist()
     subtask_successes = subtask_successes[subtask_budgets > 0].tolist()
@@ -122,7 +166,7 @@ def simulate_discretization_estimate_of_pass_at_k(samples: list[list[bool]], bud
 
     return estimates, subtask_budgets, subtask_successes
 
-def simulate_dynamic_estimate_of_pass_at_k(samples: list[list[bool]], budget: int, k_values: list[int], seed: int=0) -> list[float]:
+def simulate_estimate_of_pass_at_k(samples: list[list[bool]], budget: int, k_values: list[int], dynamic: bool=True, seed: int=0) -> list[float]:
     """
     Simulate the dynamic estimate of pass@k given subtask hardness, budget, and k.
 
@@ -134,51 +178,11 @@ def simulate_dynamic_estimate_of_pass_at_k(samples: list[list[bool]], budget: in
     Returns:
         float: The dynamic estimate of pass@k.
     """
-    n_subtasks = len(samples)
-    attempt_generators = shuffled_attempt_generators(samples, seed)
+    if dynamic:
+        subtask_budgets, subtask_successes = dynamic_sampling(budget, samples, seed=seed)
+    else:
+        subtask_budgets, subtask_successes = uniform_sampling(budget, samples, seed=seed)
 
-    # Dynamically select subtasks with fewest successes, then fewest attempts, breaking ties randomly
-    rng = np.random.default_rng(seed)
-    permutation = rng.permutation(n_subtasks)
-    subtask_budgets = [0] * n_subtasks
-    subtask_successes = [0] * n_subtasks
-    for _ in range(budget):
-        selected = np.lexsort((permutation, subtask_budgets, subtask_successes))[0]
-        if subtask_budgets[selected] < len(samples[selected]):
-            subtask_budgets[selected] += 1
-            subtask_successes[selected] += attempt(attempt_generators[selected])
-
-    # Find maximum likelihood parameters for beta-binomial distribution
-    num_samples_and_num_successes_df = pd.DataFrame({
-        "Num. Samples Total": subtask_budgets,
-        "Num. Samples Correct": subtask_successes,
-    })
-    beta_2_params = fit_beta_binomial_two_parameters_to_num_samples_and_num_successes(num_samples_and_num_successes_df)
-
-    # Compute estimate of pass@k using fitted (alpha, beta, scale) parameters
-    estimates = [compute_estimate(beta_2_params, k) for k in k_values]
-
-    return estimates, subtask_budgets, subtask_successes
-
-def simulate_uniform_estimate_of_pass_at_k(samples: list[list[bool]], budget: int, k_values: list[int], seed: int=0) -> list[float]:
-    """
-    Simulate the uniform estimate of pass@k given subtask hardness, budget, and k.
-
-    Args:
-        samples (list[list[bool]]): A list of samples for each subtask.
-        budget (int): The total number of attempts allowed.
-        k_values (list[int]): The list of k values for which to estimate pass@k.
-
-    Returns:
-        float: The dynamic estimate of pass@k.
-    """
-    n_subtasks = len(samples)
-    attempt_generators = shuffled_attempt_generators(samples, seed)
-
-    # Uniformly distribute sampling budget across subtasks
-    subtask_budgets = evenly_distribute_budget(budget, n_subtasks)
-    subtask_budgets = [min(b, len(samples[i])) for i, b in enumerate(subtask_budgets)]
-    subtask_successes = attempt(attempt_generators, amt=subtask_budgets)
     if np.sum(subtask_successes) == 0:
         return [0.0] * len(k_values), subtask_budgets, subtask_successes
 
@@ -224,7 +228,7 @@ def run_single(
 
     regression_estimates, regression_n_attempts, regression_n_successes = simulate_regression_estimate_of_pass_at_k(samples, budget, K_VALUES, seed)
     discretization_estimates, discretization_n_attempts, discretization_n_successes = simulate_discretization_estimate_of_pass_at_k(samples, budget, K_VALUES, seed)
-    dynamic_estimates, dynamic_n_attempts, dynamic_n_successes = simulate_dynamic_estimate_of_pass_at_k(samples, budget, K_VALUES, seed)
+    dynamic_estimates, dynamic_n_attempts, dynamic_n_successes = simulate_estimate_of_pass_at_k(samples, budget, K_VALUES, dynamic=True, seed=seed)
 
     return {
         "est_entries": [{
@@ -258,6 +262,27 @@ def run_single(
 def run():
     for problem, gen in DATA_SOURCES:
         for model, samples in extract_models_with_samples(gen()):
+            avgs = [sum(s) / len(s) for s in samples]
+            n_zeros = sum(1 for a in avgs if a == 0.0)
+            print(f"Problem: {problem}, Model: {model}, Subtasks: {len(samples)}, Impossible Subtasks: {n_zeros}")
+
+            avgs_nonzero = [a for a in avgs if a > 0.0]
+
+            # Plot histogram of log-scale subtask hardness
+            import matplotlib.pyplot as plt
+            plt.figure(figsize=(6, 4))
+            plt.hist(np.log10(avgs_nonzero), bins=30, color='blue', alpha=0.7)
+            plt.title(f"Histogram of Log-Scale Subtask Hardness\n{problem} - {model}")
+            plt.xlabel("Log10(Subtask Hardness)")
+            plt.ylabel("Frequency")
+            plt.grid(axis='y', alpha=0.75)
+            plt.tight_layout()
+            plt.savefig(f"figs/hardness/histogram_{sanitize(problem)}_{sanitize(model)}.png")
+            plt.close()
+
+            continue
+            
+
             f_base = f"{sanitize(problem)}_{sanitize(model)}.parquet"
             tasks = (
                 (problem, model, samples, budget, seed)

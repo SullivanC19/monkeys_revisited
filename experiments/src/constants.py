@@ -26,6 +26,9 @@ APPROACH_TO_TITLES = {
     "Regression": "Regression",
     "Discretization": "Discretized Beta [Schaeffer et al.]",
     "Dynamic": "Dynamic + Beta-Binomial [Ours]",
+
+    "Uniform": "Uniform + Beta-Binomial",
+    "Dynamic Discretization": "Dynamic + Discretized Beta",
 }
 
 SAMPLER_TO_TITLES = {

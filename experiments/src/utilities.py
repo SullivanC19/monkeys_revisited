@@ -38,12 +38,12 @@ def attempt(generator: Union[Generator[bool, None, None], List[Generator[bool, N
         return [attempt(gen, n) for gen, n in zip(generator, amt)]
     return sum(next(generator) for _ in range(amt))
 
-def shuffled_attempt_generators(samples: list[list[bool]], seed: int) -> List[Generator[bool, None, None]]:
+def shuffled_attempt_generators(samples: list[list[bool]], seed: int) -> tuple[List[Generator[bool, None, None]], List[int]]:
     """
     Create a list of generators, each simulating attempts for a subtask using the provided samples.
     """
     gen = np.random.default_rng(seed)
-    return [(s for s in gen.permutation(sb_samples)) for sb_samples in samples]
+    return [(s for s in gen.permutation(sb_samples)) for sb_samples in samples], [len(sb_samples) for sb_samples in samples]
 
 def evenly_distribute_budget(budget: int, n_subtasks: int) -> List[int]:
     """

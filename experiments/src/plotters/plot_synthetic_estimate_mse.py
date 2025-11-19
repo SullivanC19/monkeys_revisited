@@ -5,22 +5,25 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import numpy as np
 
-from constants import DIR_SYN_RESULTS, DIR_PLOTS, SOURCES_TO_TITLES, SAMPLER_TO_TITLES
+from constants import DIR_SYN_RESULTS, DIR_PLOTS, APPROACH_TO_TITLES
 from utilities import load_all_parquets
 
 sns.set_theme(style="whitegrid")
 sns.set_context("paper")
 
+greens = sns.color_palette("Greens", 4)
 grays = sns.color_palette("Greys", 2)
 purples = sns.color_palette("Purples", 5)
 PALETTE = {
-    "Uniform": grays[1],
+    "Uniform": purples[2],
     "Dynamic": purples[3],
+    "Discretization": greens[2],
+    "Dynamic Discretization": greens[3],
 }
 
 ID_COLS   = ["k", "Budget"]
 TRUE_COL  = "True Pass@k"
-METHOD_ORDER = ["Uniform", "Dynamic"]
+METHOD_ORDER = ["Uniform", "Dynamic", "Discretization", "Dynamic Discretization"]
 METHOD_CAT = CategoricalDtype(METHOD_ORDER, ordered=True)
 METHOD_COLS = [f"{m} Estimate" for m in METHOD_ORDER]
 
@@ -86,7 +89,7 @@ def plot_mse_single_k(stats: pd.DataFrame, out_dir=DIR_PLOTS):
         ax.plot(
             gm["Budget"], gm["center"],
             marker="o", linewidth=1.6,
-            label=method, color=color
+            label=APPROACH_TO_TITLES.get(str(method), str(method)), color=color
         )
         ax.fill_between(
             gm["Budget"], gm["low"], gm["high"],
@@ -108,7 +111,7 @@ def plot_mse_single_k(stats: pd.DataFrame, out_dir=DIR_PLOTS):
     present_methods = [m for m in METHOD_ORDER if m in stats["Method"].unique()]
     ax.legend(
         handles=[
-            Line2D([0], [0], color=PALETTE[m], marker="o", linewidth=1.6, label=m)
+            Line2D([0], [0], color=PALETTE[m], marker="o", linewidth=1.6, label=APPROACH_TO_TITLES[m])
             for m in present_methods
         ],
         frameon=False,
