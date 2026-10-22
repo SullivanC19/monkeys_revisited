@@ -1867,6 +1867,49 @@ def create_or_load_large_language_monkeys_code_contests_pass_at_k_df(
     return large_language_monkeys_code_contests_pass_at_k_df
 
 
+def create_or_load_large_language_monkeys_gsm8k_individual_outcomes_df(
+    raw_data_dir=f"{os.getcwd()}/data/raw_data",
+    processed_data_dir=f"{os.getcwd()}/data/processed_data",
+    refresh: bool = False,
+) -> pd.DataFrame:
+    cache_path = os.path.join(
+        processed_data_dir,
+        "large_language_monkeys_gsm8k_individual_outcomes.parquet",
+    )
+    if refresh or not os.path.exists(cache_path):
+        frames = []
+        for model in ("Llama-3-8B-Instruct", "Llama-3-70B-Instruct"):
+            ds = load_dataset(
+                "ScalingIntelligence/monkey_business",
+                f"GSM8K_{model}",
+                split="test",
+            )
+            scores = np.asarray(ds["is_corrects"], dtype=np.uint8)
+            if scores.ndim != 2 or scores.shape[1] != 10000:
+                raise ValueError(
+                    f"Unexpected GSM8K outcome shape: {scores.shape}"
+                )
+
+            n_problems, n_attempts = scores.shape
+            frames.append(pd.DataFrame({
+                "Problem Idx": np.repeat(
+                    ds["orig_dset_idx"], n_attempts
+                ),
+                "Attempt Idx": np.tile(
+                    np.arange(1, n_attempts + 1), n_problems
+                ),
+                "Score": scores.ravel(),
+                "Model": model.replace("-", " "),
+                "Benchmark": "GSM8K",
+            }))
+
+        os.makedirs(processed_data_dir, exist_ok=True)
+        pd.concat(frames, ignore_index=True).to_parquet(
+            cache_path, index=False
+        )
+    return pd.read_parquet(cache_path)
+
+
 def create_or_load_large_language_monkeys_mini_f2f_individual_outcomes_df(
     raw_data_dir=f"{os.getcwd()}/data/raw_data",
     processed_data_dir=f"{os.getcwd()}/data/processed_data",

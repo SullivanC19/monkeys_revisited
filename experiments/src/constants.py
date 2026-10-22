@@ -14,12 +14,16 @@ DATA_SOURCES = [
     ('jailbreaking', analyze.create_or_load_bon_jailbreaking_text_individual_outcomes_df),
     ('code_contests', analyze.create_or_load_large_language_monkeys_code_contests_individual_outcomes_df),
     ('math', analyze.create_or_load_large_language_monkeys_pythia_math_individual_outcomes_df),
+    ('gsm8k', analyze.create_or_load_large_language_monkeys_gsm8k_individual_outcomes_df),
+    ('mini_f2f', analyze.create_or_load_large_language_monkeys_mini_f2f_individual_outcomes_df),
 ]
 
 SOURCES_TO_TITLES = {
     'jailbreaking': 'AdvBench',
     'math': 'MATH',
     'code_contests': 'Code Contests',
+    'gsm8k': 'GSM8K',
+    'mini_f2f': 'MiniF2F-MATH',
 }
 
 APPROACH_TO_TITLES = {

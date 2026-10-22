@@ -21,9 +21,9 @@ def create_synthetic_samples(n_subtasks: int, n_samples: int=10000, k: int=1000,
     """
     rng = np.random.default_rng(seed)
     samples = []
-    n_hard = int(n_subtasks / 2)
+    n_hard = 1
     n_easy = n_subtasks - n_hard
-    p_success = [0] * n_hard + [0.3] * n_easy
+    p_success = [1e-4] * n_hard + rng.uniform(0.1, 0.3, n_easy).tolist()
     for p in p_success:
         subtask_samples = rng.uniform(0, 1, n_samples) < p
         samples.append(subtask_samples.tolist())
@@ -50,8 +50,8 @@ def run():
 
     print("Running synthetic best-case scenario simulation...")
 
-    # samples = create_synthetic_samples(n_subtasks=n_subtasks, n_samples=n_samples, k=k)
-    samples = create_uar_synthetic_samples(n_subtasks=n_subtasks, n_samples=n_samples, k=k)
+    samples = create_synthetic_samples(n_subtasks=n_subtasks, n_samples=n_samples, k=k)
+    # samples = create_uar_synthetic_samples(n_subtasks=n_subtasks, n_samples=n_samples, k=k)
     hardness = compute_hardness(samples)
 
     res = []

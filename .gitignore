@@ -10,3 +10,7 @@ data/raw_data/many_shot_jailbreaking/task_scary_evals_psychopathy__max_num_shots
 
 tmp*.py
 wandb/
+
+output/
+presentation/
+tmp/

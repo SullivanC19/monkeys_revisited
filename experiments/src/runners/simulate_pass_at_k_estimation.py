@@ -265,24 +265,7 @@ def run():
             avgs = [sum(s) / len(s) for s in samples]
             n_zeros = sum(1 for a in avgs if a == 0.0)
             print(f"Problem: {problem}, Model: {model}, Subtasks: {len(samples)}, Impossible Subtasks: {n_zeros}")
-
-            avgs_nonzero = [a for a in avgs if a > 0.0]
-
-            # Plot histogram of log-scale subtask hardness
-            import matplotlib.pyplot as plt
-            plt.figure(figsize=(6, 4))
-            plt.hist(np.log10(avgs_nonzero), bins=30, color='blue', alpha=0.7)
-            plt.title(f"Histogram of Log-Scale Subtask Hardness\n{problem} - {model}")
-            plt.xlabel("Log10(Subtask Hardness)")
-            plt.ylabel("Frequency")
-            plt.grid(axis='y', alpha=0.75)
-            plt.tight_layout()
-            plt.savefig(f"figs/hardness/histogram_{sanitize(problem)}_{sanitize(model)}.png")
-            plt.close()
-
-            continue
             
-
             f_base = f"{sanitize(problem)}_{sanitize(model)}.parquet"
             tasks = (
                 (problem, model, samples, budget, seed)
