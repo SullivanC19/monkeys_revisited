@@ -34,7 +34,7 @@ def uniform_sampling(budget: int, samples: list[int], seed: int=0) -> tuple[list
     """
     n_subtasks = len(samples)
     attempt_generators, max_attempts = shuffled_attempt_generators(samples, seed=seed)
-    subtask_budgets = evenly_distribute_budget(budget, n_subtasks)
+    subtask_budgets = evenly_distribute_budget(budget, n_subtasks, seed=seed)
     subtask_budgets = np.minimum(subtask_budgets, np.array(max_attempts))
     subtask_successes = attempt(attempt_generators, amt=subtask_budgets.tolist())
     subtask_successes = np.array(subtask_successes)

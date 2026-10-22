@@ -70,7 +70,12 @@ def bootstrap_mse(df: pd.DataFrame, B: int = 1000, seed: int | None = 0) -> pd.D
         out["Method"] = out["Method"].astype(METHOD_CAT)
     return out
 
-def plot_mse_single_k(stats: pd.DataFrame, out_dir=DIR_PLOTS):
+def plot_mse_single_k(
+    stats: pd.DataFrame,
+    out_dir=DIR_PLOTS,
+    title: str="Prediction Mean Squared Error (MSE) on Synthetic Data",
+    filename: str | None=None,
+):
     """Plot MSE vs Budget for a single k value."""
     stats = stats.copy()
     stats["Method"] = pd.Categorical(stats["Method"], METHOD_ORDER, ordered=True)
@@ -106,7 +111,7 @@ def plot_mse_single_k(stats: pd.DataFrame, out_dir=DIR_PLOTS):
 
     # Title and legend
     k_value = stats["k"].iloc[0]
-    ax.set_title(f"Prediction Mean Squared Error (MSE) on Synthetic Data", fontsize=12)
+    ax.set_title(title, fontsize=12)
 
     present_methods = [m for m in METHOD_ORDER if m in stats["Method"].unique()]
     ax.legend(
@@ -119,11 +124,10 @@ def plot_mse_single_k(stats: pd.DataFrame, out_dir=DIR_PLOTS):
     )
 
     # Save
-    out_dir = out_dir / "syn"
-    out_dir.mkdir(parents=True, exist_ok=True)
-    base = f"estimate_mse-k={k_value}"
-    fig.savefig(out_dir / f"{base}.png", dpi=200, bbox_inches="tight")
-    fig.savefig(out_dir / f"{base}.pdf", bbox_inches="tight")
+    base = out_dir / "syn" / (filename or f"estimate_mse-k={k_value}")
+    base.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(f"{base}.png", dpi=200, bbox_inches="tight")
+    fig.savefig(f"{base}.pdf", bbox_inches="tight")
     plt.close(fig)
 
 def run():
