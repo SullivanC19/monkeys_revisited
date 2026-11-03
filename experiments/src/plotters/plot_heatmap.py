@@ -12,7 +12,7 @@ from matplotlib import cm
 from constants import DIR_EST_RESULTS, DIR_PLOTS, SOURCES_TO_TITLES, APPROACH_TO_TITLES
 from utilities import load_all_parquets
 
-sns.set_theme(style="whitegrid")
+sns.set_theme(style="whitegrid", font="DejaVu Sans")
 sns.set_context("paper", font_scale=0.85)
 
 METHOD_ORDER = ["Regression", "Discretization", "Dynamic"]
@@ -106,9 +106,18 @@ def plot_mse_heatmaps_by_problem(mse: pd.DataFrame, out_dir: Path, model_order: 
                 im = sns.heatmap(
                     pivot, ax=ax, cmap=GP_CMAP, norm=col_norms[model], cbar=False,
                     mask=pivot.isna(), linewidths=0,
-                    yticklabels=1,
+                    yticklabels=1, rasterized=True,
                 )
                 last_col_im[model] = im
+
+                # Label round budgets at their positions on the log-spaced grid.
+                budget_ticks = [b for b in (100, 1000, 10000)
+                                if pivot.columns.min() <= b <= pivot.columns.max()]
+                ax.set_xticks(np.interp(
+                    np.log10(budget_ticks), np.log10(pivot.columns),
+                    np.arange(len(pivot.columns)) + 0.5,
+                ))
+                ax.set_xticklabels([f"{b:,}" for b in budget_ticks], rotation=0)
 
                 # Clean labeling
                 if c == 0:

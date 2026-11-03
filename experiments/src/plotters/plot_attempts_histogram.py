@@ -144,12 +144,8 @@ def plot_attempts_histograms_per_problem_budget(
         if not models:
             continue
 
-        # keep a full grid (optional); otherwise drop this trimming
         if col_wrap > 0 and len(models) >= col_wrap:
-            keep = models[: (len(models) // col_wrap) * col_wrap]
-            if keep:
-                gp = gp[gp[MODEL_COL].isin(keep)]
-                models = keep
+            models = models[:len(models) // col_wrap * col_wrap]
 
         n = len(models)
         ncols = min(col_wrap, n) if col_wrap else n

@@ -7,7 +7,7 @@ import seaborn as sns
 
 os.environ["MPLCONFIGDIR"] = "/tmp/matplotlib"
 
-sns.set_theme(style="whitegrid")
+sns.set_theme(style="whitegrid", font="DejaVu Sans")
 sns.set_context("paper")
 
 DATA_SOURCES = [

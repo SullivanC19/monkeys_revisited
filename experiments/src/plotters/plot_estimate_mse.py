@@ -8,7 +8,7 @@ import numpy as np
 from constants import DIR_EST_RESULTS, DIR_PLOTS, SOURCES_TO_TITLES, APPROACH_TO_TITLES
 from utilities import load_all_parquets
 
-sns.set_theme(style="whitegrid")
+sns.set_theme(style="whitegrid", font="DejaVu Sans")
 sns.set_context("paper")
 
 greens = sns.color_palette("Greens", 4)
@@ -89,8 +89,7 @@ def plot_mse_facets_by_k(stats: pd.DataFrame, out_dir=DIR_PLOTS, col_wrap=4):
     for (k, problem), gkp in stats.groupby(["k", "Problem"], dropna=False):
         gkp = gkp.sort_values(["Model", "Budget", "Method"])
         models = gkp["Model"].dropna().unique().tolist()
-        # keep = models[:len(models) // col_wrap * col_wrap]
-        keep = models
+        keep = models[:len(models) // col_wrap * col_wrap] if len(models) >= col_wrap else models
         gkp = gkp[gkp["Model"].isin(keep)]
 
         g = sns.FacetGrid(

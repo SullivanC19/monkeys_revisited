@@ -8,7 +8,7 @@ import numpy as np
 from constants import DIR_SYN_RESULTS, DIR_PLOTS, APPROACH_TO_TITLES
 from utilities import load_all_parquets
 
-sns.set_theme(style="whitegrid")
+sns.set_theme(style="whitegrid", font="DejaVu Sans")
 sns.set_context("paper")
 
 greens = sns.color_palette("Greens", 4)

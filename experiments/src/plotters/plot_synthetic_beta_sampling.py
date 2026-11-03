@@ -51,7 +51,7 @@ def run():
     alpha_our, beta_our = float(params_our['alpha']), float(params_our['beta'])
 
     # ---- Plot ----
-    sns.set_theme(style="whitegrid")
+    sns.set_theme(style="whitegrid", font="DejaVu Sans")
     sns.set_context("paper")
 
     fig, ax = plt.subplots(figsize=(6, 4))
